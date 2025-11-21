@@ -62,7 +62,7 @@ step 1: activities (WBS), step 2 Gantt chart
 ###
 
 ## Gantt chart
-Insert here Gantt chart
+![Gantt chart](Images/EZShop_Estimation_Gantt.png)
 
 Estimated duration: (calendar time) 17 calendar weeks
 
