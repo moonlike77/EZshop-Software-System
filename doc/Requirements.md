@@ -2,14 +2,6 @@
 
 # Requirements Document - EZShop
 
-Date: 24/10/2025
-
-Version: 1.0.0
-
-| Version number | Change |
-| :------------: | :----: |
-|                |        |
-
 # Contents
 
 - [Requirements Document - EzShop](#requirements-document)
