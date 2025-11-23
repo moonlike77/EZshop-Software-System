@@ -101,9 +101,7 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 ## Context Diagram
 
-\<Define here Context diagram using UML use case diagram>
-
-\<actors are a subset of stakeholders>
+![Context Diagram](/Images/Context_Diagram.png)
 
 ## Interfaces
 
@@ -164,28 +162,29 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 ## Use case brief
 |  UC name   | Goal         | Description |
-| :---:    | :---------: | :---: |
-|          |             |       |
-
-
+| :---:    | :--------- | :--- |
+|Process In-Shop Sale|Succesfully complete a sale at the physical shop|The cashier scans the barcodes of all the items to bebought, process the payment sending it to the Payment System and waiting for the approval and for the customer to pay|
+|Process Online Sale|Succesfully complete an online sale|The customer adds items to the cart, goes to checkout and process the payment|
+|Handle Return at Physical Shop|Customer request a return and receive the refound by cash|The customer goes to the shop with the receipt, cashier verifies it's validity and goes on with the refound. Customer requests cash refound, cashier open cash drawer and gives the customer the moneys|
+|Manage Products|Adding a new product in the inventory|The Shop Owner adds a new product in the shop's inventory, adding its barcode, all the details about the item, and its initial stock quantity. The system validates the data and saves the product in the inventory|
+|Manage Inventory|Updating the stock levels of products|Warehouse workers provides the shop owner the stock count of a given product. Shop Owner searches it with the barcode, enters the stock level and saves it. System updates product's level quantity|
+|Manage Supplier Orders|Creating an order for product with low stock level|Shop Owner create a supplier order, select the supplier and the item to restock and sends it. The system takes track of the order status|
 
 ## Use case diagram
 
-\<define here UML Use case diagram UCD summarizing all use cases, and their relationships>
-
-\<next describe here each use case in the UCD>
+![UC Diagram](/Images/Use_Cases.png)
 
 ### Use case 1, UC1
 
-### **Use case 1, UC1: Process Sale at physical shop**
+### **Use case 1, UC1: Process In-Shop Sale**
 
 | Actors Involved | Cashier |
 | :---- | :---- |
 | **Precondition** | Cashier is logged in to the POS terminal. The system is in the "New Sale" state. |
 | **Post condition** | Sale is recorded, payment is processed, inventory is decremented, and a receipt is printed. |
 | **Nominal Scenario** | **(Happy Path \- Card Payment)** |
-| **Variants** | **Variant 1.1:** Payment by Cash (System must calculate change). **Variant 1.2:** Product lookup by name (barcode unscannable or missing). **Variant 1.3:** Applying a discount to an item or the total sale. **Variant 1.4:** Sale includes an age-restricted item. Every time a restricted item is bought, it is needed to know the age of the customer. |
-| **Exceptions** | **Exception 1.1:** Barcode not found in the product database. **Exception 1.2:** Payment denied by External Payment System. **Exception 1.3:** Receipt printer is out of paper or disconnected. **Exception 1.4:** System is in Offline Mode (NFR5). **Exception 1.5:** The sale comprehends an age-restricted order and the customer’s age is below 18\. |
+| **Variants** | **Variant 1.1:** Payment by Cash (System must calculate change). <br><br> **Variant 1.2:** Product lookup by name (barcode unscannable or missing). <br><br>**Variant 1.3:** Applying a discount to an item or the total sale. <br><br>**Variant 1.4:** Sale includes an age-restricted item. Every time a restricted item is bought, it is needed to know the age of the customer. |
+| **Exceptions** | **Exception 1.1:** Barcode not found in the product database.<br><br> **Exception 1.2:** Payment denied by External Payment System. <br><br>**Exception 1.3:** Receipt printer is out of paper or disconnected. <br><br>**Exception 1.4:** System is in Offline Mode (NFR5).<br><br> **Exception 1.5:** The sale comprehends an age-restricted order and the customer’s age is below 18\. |
 
 #### **Scenario 1.1: Nominal (Card Payment)**
 
@@ -205,15 +204,15 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 ### 
 
-### **Use case 2, UC2: Process Sale by customer (online)**
+### **Use case 2, UC2: Process Online Sale**
 
 | Actors Involved | Customer |
 | :---- | :---- |
 | **Precondition** | Customer is logged on the app |
 | **Post condition** | Sale is recorded, payment is processed, inventory is decremented, and a receipt is sent to his email. |
 | **Nominal Scenario** | **(Happy Path \- Card Payment)** |
-| **Variants** | **Variant 2.1:** Customer insert a promo code which will apply a discount to some products |
-| **Exceptions** | **Exception 2.1:** the card selected by the customer hasn’t enough money to finish the sale **Exception 2.2:** online bank systems are down so the payment can not finish **Exception 2.3:** the server goes down in the middle of the operation **Exception 2.4:** the customer has not an account |
+| **Variants** | **Variant 2.1:** Customer insert a promo code which will apply a discount to some products. |
+| **Exceptions** | **Exception 2.1:** the card selected by the customer hasn’t enough money to finish the sale.<br><br> **Exception 2.2:** online bank systems are down so the payment can not finish. <br><br>**Exception 2.3:** the server goes down in the middle of the operation.<br><br> **Exception 2.4:** the customer has not an account. |
 
 #### **Scenario 2.1: Nominal ()**
 
@@ -240,8 +239,8 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 | **Precondition** | Cashier/Shop Owner is logged in. |
 | **Post condition** | Customer requests a return, return is recorded, refund is issued to the customer, and inventory is incremented. |
 | **Nominal Scenario** | **(Happy Path \- Return with Receipt)** |
-| **Variants** | **Variant 3.1:** Return without a receipt (requires Owner approval). **Variant 3.2:** Refund issued as store credit instead of cash/card. **Variant 3.3:** Refund is not 100% but less, has to be specified. |
-| **Exceptions** | **Exception 3.1:** Original sale ID is not found or is too old. **Exception 3.2:** Item is in a non-returnable condition. |
+| **Variants** | **Variant 3.1:** Return without a receipt (requires Owner approval).<br><br> **Variant 3.2:** Refund issued as store credit instead of cash/card. <br><br>**Variant 3.3:** Refund is not 100% but less, has to be specified. |
+| **Exceptions** | **Exception 3.1:** Original sale ID is not found or is too old. <br><br>**Exception 3.2:** Item is in a non-returnable condition. |
 
 #### **Scenario 3.1: Nominal (Return with Receipt at physical shop)**
 
@@ -271,8 +270,8 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 | **Precondition** | Shop Owner is logged in to the Management Dashboard. |
 | **Post condition** | The product catalog is updated with new or changed information. |
 | **Nominal Scenario** | **(Happy Path \- Add a New Product)** |
-| **Variants** | **Variant 4.1:** Edit an existing product **Variant 4.3:** Deactivate a product (so it can no longer be sold). |
-| **Exceptions** | **Exception 4.1:** Barcode entered already exists for another product. **Exception 4.2:** Invalid data (e.g., sale price is lower than cost price, negative price). |
+| **Variants** | **Variant 4.1:** Edit an existing product.<br><br> **Variant 4.3:** Deactivate a product (so it can no longer be sold). |
+| **Exceptions** | **Exception 4.1:** Barcode entered already exists for another product.<br><br> **Exception 4.2:** Invalid data (e.g., sale price is lower than cost price, negative price). |
 
 #### **Scenario 4.1: Nominal (Add a New Product)**
 
@@ -301,7 +300,7 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 | **Precondition** | Shop Owner and Warehouse workers are logged in. |
 | **Post condition** | The "quantity on hand" for a product is accurately updated in the system. |
 | **Nominal Scenario** | **(Happy Path \- Manual Stock-take Adjustment)** |
-| **Variants** | **Variant 5.1:** Inventory is automatically debited (Process Sale). **Variant 5.2:** Inventory is automatically incremented (Handle Return). **Variant 5.3:** Inventory is automatically incremented by "Receiving Stock" from UC6 (Manage Supplier Orders). **Variant 5.4:** Manually writing off stock as "damaged" or "expired". |
+| **Variants** | **Variant 5.1:** Inventory is automatically debited (Process Sale). <br><br>**Variant 5.2:** Inventory is automatically incremented (Handle Return). <br><br>**Variant 5.3:** Inventory is automatically incremented by "Receiving Stock" from UC6 (Manage Supplier Orders).<br><br> **Variant 5.4:** Manually writing off stock as "damaged" or "expired". |
 | **Exceptions** | **Exception 5.1:** User attempts to enter a non-numeric or negative stock level. |
 
 #### **Scenario 5.1: Nominal (Manual Stock-take Adjustment)**
@@ -331,8 +330,8 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 | **Precondition** | Shop Owner is logged in. Products and suppliers are configured . |
 | **Post condition** | A purchase order (PO) is sent to the supplier, and its status is "Sent". |
 | **Nominal Scenario** | **(Happy Path \- Create and Send PO based on Low Stock)** |
-| **Variants** | **Variant 6.1:** Manually create a PO for any item. **Variant 6.2:** Receive stock against an existing PO (updates inventory). |
-| **Exceptions** | **Exception 6.1:** Supplier email address is missing or invalid. **Exception 6.2:** Received stock quantity does not match the ordered quantity. |
+| **Variants** | **Variant 6.1:** Manually create a PO for any item.<br><br> **Variant 6.2:** Receive stock against an existing PO (updates inventory). |
+| **Exceptions** | **Exception 6.1:** Supplier email address is missing or invalid.<br><br> **Exception 6.2:** Received stock quantity does not match the ordered quantity. |
 
 #### **Scenario 6.1: Nominal (Create and Send PO)**
 
@@ -346,15 +345,13 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 | :---- | :---- | :---- |
 | 1\. Navigates to "Supplier Orders" and selects "Create New PO". | 2\. System prompts to select a supplier. | FR6.1 |
 | 3\. Selects "Supplier A" and the item to restock. | 4\. System calculates the total cost of the PO based on the "Cost Price" of the products. | FR6.1 |
-| 5\. Clicks "Send \`PO". | 6\. System displays a confirmation prompt showing the supplier's email. | FR6.2 |
+| 5\. Clicks "Send PO". | 6\. System displays a confirmation prompt showing the supplier's email. | FR6.2 |
 | 7\. Clicks "Confirm Send". | 8\. System generates a PDF of the PO, attaches it to an email, and sends it to the supplier's contact email. | FR6.2 |
 |  | 9\. System updates the status of the PO from "Draft" to "Sent". | FR6.4 |
 
 # Glossary
 
-\<use UML class diagram to define important terms, or concepts in the domain of the application, and their relationships>
-
-\<concepts must be used consistently all over the document, ex in use cases, requirements etc>
+![Glossary](/Images/Ezshop_-_Glossary-2025-11-20-102903.png)
 
 # System Design
 
@@ -394,4 +391,4 @@ The system connects to a few external services:
 
 # Hardware Software architecture
 
-\<describe here the hardware software architecture using UML deployment diagram >
+![HW_SW_Configuration](/Images/HW_SW_Configuration.png)
