@@ -9,7 +9,4 @@ Version:
  You are free to organize it as you prefer. A suggested presentation matches the Use cases and scenarios defined in the Requirement document.
   The GUI can be shown as a sequence of graphical files (jpg, png) and as an animated prototype (mp4 or html)>
 
-<video width="600" height="400" controls>
-  <source src="Images/shop_owner_flow.mp4" type="video/mp4">
-  Il tuo browser non supporta il tag video.
-</video>
+[Shop Owner Flow](https://drive.google.com/file/d/1aT4Z0ZnQJz_6gtM7I18LjxFAOHNyiSky/view?usp=sharing)
