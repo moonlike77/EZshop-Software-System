@@ -101,7 +101,7 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 ## Context Diagram
 
-![Context Diagram](/Images/Context_Diagram.png)
+![Context Diagram](Images/Context_Diagram.png)
 
 ## Interfaces
 
@@ -172,7 +172,7 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 ## Use case diagram
 
-![UC Diagram](/Images/Use_Cases.png)
+![UC Diagram](Images/Use_Cases.png)
 
 ### Use case 1, UC1
 
@@ -351,7 +351,7 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 # Glossary
 
-![Glossary](/Images/Ezshop_-_Glossary-2025-11-20-102903.png)
+![Glossary](Images/Ezshop_-_Glossary-2025-11-20-102903.png)
 
 # System Design
 
@@ -391,4 +391,4 @@ The system connects to a few external services:
 
 # Hardware Software architecture
 
-![HW_SW_Configuration](/Images/HW_SW_Configuration.png)
+![HW_SW_Configuration](Images/HW_SW_Configuration.png)
