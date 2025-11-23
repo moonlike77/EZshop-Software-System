@@ -351,6 +351,23 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 # Glossary
 
+* **User:** Anyone who can log into the system (like a Shop Owner, Accountant, Warehouse workers,  Customer, or Cashier).
+* **Account:** An user who had access to the system with certain role.
+* **Customer:** Uses the **Mobile App / Web interface** to order things online or return items.
+* **Shop Owner:** The main boss. They manage products, stock, order from suppliers, and handle other user accounts.  
+* **Cashier:** Works at the **POS Terminal** (the register) to handle in-store sales and returns.  
+* **Warehouse Worker:** Manages the physical stock (counts items and checks in new supplier deliveries).  
+* **Accountant:** Handles the money and financial reports.  
+* **Product:** A single type of item for sale (e.g., a specific shirt).  
+* **Sale:** A purchase transaction, either in-store (Cashier) or online (Customer).  
+* **Return:** When a customer gives a product back for a refund or store credit.    
+* **Purchase Order:** The document the Shop Owner creates to order new stock from a Supplier.
+* **Supplier:** Who provides the shop his products.
+* **Payment Services:** External system which handles all the payments.
+* **Product In Sale:** Whichever product which is in a sale.
+* **Inventory Item:** Inventory representation of a product, with its stock level.
+
+
 ![Glossary](Images/Ezshop_-_Glossary-2025-11-20-102903.png)
 
 # System Design
