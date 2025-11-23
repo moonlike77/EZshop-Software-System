@@ -18,15 +18,21 @@
 - [Table of Rights](#table-of-rights)
 - [Use case diagram and use cases](#use-case-diagram-and-use-cases)
   - [Use case diagram](#use-case-diagram)
-    - [Use case 1, UC1](#use-case-1-uc1)
-      - [Scenario 1.1](#scenario-11)
-      - [Scenario 1.2](#scenario-12)
-      - [Scenario 1.x](#scenario-1x)
-    - [Use case 2, UC2](#use-case-2-uc2)
-    - [Use case x, UCx](#use-case-x-ucx)
+    - [Use case 1, UC1](#use-case-1-uc1-process-in-shop-sale)
+      - [Scenario 1.1](#scenario-11-nominal-card-payment)
+    - [Use case 2, UC2](#use-case-2-uc2-process-online-sale)
+      - [Scenario 2.1](#scenario-21-nominal)
+    - [Use case 3, UC3](#use-case-3-uc3-handle-return-physical-store)
+      - [Scenario 3.1](#scenario-31-nominal-return-with-receipt-at-physical-shop)
+    - [Use case 4, UC4](#use-case-4-uc4-manage-products)
+      - [Scenario 4.1](#scenario-41-nominal-add-a-new-product)
+    - [Use case 5, UC5](#use-case-5-uc5-manage-inventory)
+      - [Scenario 5.1](#scenario-51-nominal-manual-stock-take-adjustment)
+    - [Use case 6, UC6](#use-case-6-uc6-manage-supplier-orders)
+      - [Scenario 6.1](#scenario-61-nominal-create-and-send-po)
 - [Glossary](#glossary)
 - [System Design](#system-design)
-- [Hardware Software architecture](#Hardware-software-architecture)
+- [Hardware Software architecture](#hardware-software-architecture)
 
 # Informal description
 
@@ -166,8 +172,6 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 
 ![UC Diagram](Images/Use_Cases.png)
 
-### Use case 1, UC1
-
 ### **Use case 1, UC1: Process In-Shop Sale**
 
 | Actors Involved | Cashier |
@@ -206,7 +210,7 @@ The EZShop system is designed to be a high-value, affordable, and scalable solut
 | **Variants** | **Variant 2.1:** Customer insert a promo code which will apply a discount to some products. |
 | **Exceptions** | **Exception 2.1:** the card selected by the customer hasn’t enough money to finish the sale.<br><br> **Exception 2.2:** online bank systems are down so the payment can not finish. <br><br>**Exception 2.3:** the server goes down in the middle of the operation.<br><br> **Exception 2.4:** the customer has not an account. |
 
-#### **Scenario 2.1: Nominal ()**
+#### **Scenario 2.1: Nominal**
 
 | Precondition | Customer is in the initial page, ready to insert items in the cart |
 | :---- | :---- |
