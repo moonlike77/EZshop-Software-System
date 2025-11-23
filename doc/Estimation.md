@@ -1,9 +1,5 @@
 # Project Estimation
 
-Date:
-
-Version:
-
 # Estimation approach
 
 Consider the EZShop project as described in your requirements document, assume that you are going to develop the project INDEPENDENT of the deadlines of the course, and from scratch
