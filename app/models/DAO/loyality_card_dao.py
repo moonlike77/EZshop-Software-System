@@ -5,5 +5,5 @@ from app.database.database import Base
 class LoyalityCardDAO(Base):
     __tablename__ = "loyality cards"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    card_id = Column(String, primary_key=True)
     points = Column(Integer, nullable=False)
