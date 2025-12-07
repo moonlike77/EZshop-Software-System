@@ -3,7 +3,7 @@ from app.database.database import Base
 
 
 class CustomerDAO(Base):
-    __tablename__ = "users"
+    __tablename__ = "customers"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, unique=True)
