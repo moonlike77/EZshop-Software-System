@@ -27,6 +27,7 @@ URL_USERS = "/users"
 ROUTES = {
     "V1_AUTH": APP_V1_BASE_URL + URL_AUTH,
     "V1_USERS": APP_V1_BASE_URL + URL_USERS,
+    "V1_ACCOUNTING": APP_V1_BASE_URL + "/accounting",
     
     "V1_GENERAL": APP_V1_BASE_URL,
 }
