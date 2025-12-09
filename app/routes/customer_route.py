@@ -1,0 +1,109 @@
+from fastapi import APIRouter, HTTPException, status, Depends
+from typing import List
+from app.models.DTO.customer_dto import CustomerDTO, CustomerResponseDTO, CustomerCreateDTO
+from app.controllers.customer_controller import CustomerController
+#from app.middleware.auth_middleware import authenticate_user
+from app.config.config import ROUTES
+from fastapi import Response
+from app.models.errors.notfound_error import NotFoundError
+from app.models.errors.bad_request import BadRequestError
+
+
+router = APIRouter(prefix=ROUTES['V1_CUSTOMERS'], tags=["customers"])
+controller = CustomerController()
+
+@router.post("/", 
+    response_model=CustomerResponseDTO, 
+    status_code=status.HTTP_201_CREATED
+    #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+    )
+async def create_customer(customer: CustomerCreateDTO):
+    """
+    Create a new customer.
+
+    - Permissions: Administrator
+    - Request body: customerCreateDTO (contains customername, password, type, ...)
+    - Returns: Created customer as customerResponseDTO
+    - Raises:
+      - BadRequestError: when mandatory fields (password, type) are missing or invalid
+    - Status code: 201 Created
+    """
+    if customer.name is None or customer.name == '':
+        raise BadRequestError('Name is a mandatory field')
+    return await controller.create_customer(customer)
+    
+@router.get("/", response_model=List[CustomerResponseDTO]
+            #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+            )
+async def list_customers():
+    """
+    List all customers.
+
+    - Permissions: Administrator
+    - Returns: List of customerResponseDTO
+    - Status code: 200 OK
+    """
+    return await controller.list_customers()
+
+
+@router.get("/{customer_id}", response_model=CustomerResponseDTO
+            #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+            )
+async def get_customer(customer_id: int):
+    """
+    Retrieve a single customer by ID.
+
+    - Permissions: Administrator
+    - Path parameter: customer_id (int)
+    - Returns: customerResponseDTO for the requested customer
+    - Raises:
+      - NotFoundError: when the customer does not exist
+    - Status code: 200 OK
+    """
+    customer = await controller.get_customer(customer_id)
+    if not customer:
+        raise NotFoundError("customer not found")
+    return customer
+
+
+@router.put("/{customer_id}", response_model=CustomerResponseDTO, 
+    status_code=status.HTTP_201_CREATED,
+    #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+    )
+async def update_customer(customer_id: int, customer: CustomerDTO):
+    """
+    Update an existing customer.
+
+    - Permissions: Administrator
+    - Path parameter: customer_id (int)
+    - Request body: customerDTO (fields to update)
+    - Returns: Updated customer as customerResponseDTO
+    - Raises:
+      - NotFoundError: when the customer to update does not exist
+    - Status code: 201 Created
+    """
+    updated = await controller.update_customer(customer_id, customer)
+    if not updated:
+        raise NotFoundError("customer not found")
+    return updated
+
+
+@router.delete("/{customer_id}", 
+               status_code=status.HTTP_204_NO_CONTENT
+               #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+               )
+async def delete_customer(customer_id: int):
+    """
+    Delete a customer by ID.
+
+    - Permissions: Administrator
+    - Path parameter: customer_id (int)
+    - Returns: No content (204) on success
+    - Raises:
+      - NotFoundError: when the customer to delete does not exist
+    - Status code: 204 No Content
+    """
+    success = await controller.delete_customer(customer_id)
+    if not success:
+        raise NotFoundError("customer not found")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

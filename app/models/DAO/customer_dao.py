@@ -8,4 +8,4 @@ class CustomerDAO(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, unique=True)
-    card = Column(LoyalityCardDTO, nullable=True)
+    #card = Column(LoyalityCardDTO, nullable=True)
