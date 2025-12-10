@@ -9,6 +9,7 @@ from app.routes import  user_route, auth_route
 from contextlib import asynccontextmanager
 from app.database.database import engine, Base
 from logging import getLogger
+from app.routes import auth_route, user_route, sale_route  # // added sale_route
 
 logger = getLogger(__name__)
 
@@ -34,6 +35,7 @@ app.add_middleware(
 # register routers
 app.include_router(auth_route.router)
 app.include_router(user_route.router)
+app.include_router(sale_route.router)  # // added sale_route
 
 app.add_exception_handler(AppError, error_handler)
 app.add_exception_handler(Exception, error_handler)
