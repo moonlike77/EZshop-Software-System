@@ -4,4 +4,4 @@ class UserType(str, Enum):
     Administrator = "Administrator"
     Cashier = "Cashier"
     ShopManager = "ShopManager"
-    Accounting = "Accountz"
+    Accounting = "Accountant"

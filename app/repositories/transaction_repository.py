@@ -63,6 +63,57 @@ class TransactionRepository:
 
     async def get_balance(self) -> float:
         async with await self._get_session() as session:
-            result = await session.execute(select(SystemInfoDAO).limit(1))
             system_info = result.scalars().first()
             return system_info.balance if system_info else 0.0
+
+    async def set_balance(self, amount: float, user_id: int | None) -> TransactionDAO:
+        async with await self._get_session() as session:
+            # Get current balance (transactional, locking might be needed in real world but ok for now)
+            result = await session.execute(select(SystemInfoDAO).limit(1))
+            system_info = result.scalars().first()
+            
+            if not system_info:
+                system_info = SystemInfoDAO(balance=0.0)
+                session.add(system_info)
+                current_balance = 0.0
+            else:
+                current_balance = system_info.balance
+                
+            difference = amount - current_balance
+            
+            if difference == 0:
+                # No change needed, but maybe we want to log it? 
+                # For now let's create a 0 amount transaction or just return a dummy
+                # Postman doesn't specify behavior for 0 change. 
+                # Let's create a transaction for record.
+                # Assuming 0 diff is "CREDIT" 0.0
+                correction_type = TransactionType.CREDIT
+                correction_amount = 0.0
+            elif difference > 0:
+                correction_type = TransactionType.CREDIT
+                correction_amount = difference
+            else:
+                correction_type = TransactionType.DEBIT
+                correction_amount = abs(difference)
+                
+            # Create transaction record
+            transaction = TransactionDAO(
+                amount=correction_amount,
+                type=correction_type,
+                description="Balance correction (Set Balance)",
+                created_by=user_id,
+                timestamp=datetime.now()
+            )
+            session.add(transaction)
+            
+            # Update balance
+            # We can trust our calc: current + diff = amount, OR just force set it.
+            # Force setting is safer to match exact request.
+            system_info.balance = amount
+            
+            await session.commit()
+            await session.refresh(transaction)
+            return transaction
+
+    async def reset_balance(self, user_id: int | None) -> TransactionDAO:
+        return await self.set_balance(0.0, user_id)

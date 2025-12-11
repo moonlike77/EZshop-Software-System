@@ -15,5 +15,10 @@ class TransactionResponseDTO(BaseModel):
     timestamp: datetime
     created_by: int | None
 
+
     class Config:
         from_attributes = True
+
+class BalanceResponseDTO(BaseModel):
+    balance: float
+

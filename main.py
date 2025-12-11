@@ -43,7 +43,7 @@ app.add_exception_handler(Exception, error_handler)
 # simple root
 @app.get("/")
 def read_root():
-    return {"message": "FastAPI MVC Demo"}
+    return {"message": "EZShop"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

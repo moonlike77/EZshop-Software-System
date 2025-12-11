@@ -23,3 +23,13 @@ class AccountingController:
 
     async def get_current_balance(self) -> float:
         return await self.repository.get_balance()
+
+    async def set_balance(self, amount: float, user_id: int) -> float:
+        if amount < 0:
+            raise ValueError("Balance cannot be negative")
+        await self.repository.set_balance(amount, user_id)
+        return amount
+
+    async def reset_balance(self, user_id: int) -> float:
+        await self.repository.reset_balance(user_id)
+        return 0.0
