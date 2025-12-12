@@ -15,7 +15,7 @@ class CustomerRepository:
     async def _get_session(self) -> AsyncSession:
         return self._session or AsyncSessionLocal()
 
-    async def create_customer(self, name: str, card: LoyalityCardDAO) -> CustomerDAO:
+    async def create_customer(self, name: str) -> CustomerDAO:
         """
         Create customer or throw ConflictError if name exists
         """
@@ -29,7 +29,7 @@ class CustomerRepository:
                 f"Customer with name '{name}' already exists"
             )
 
-            customer = CustomerDAO(name=name, card=card)
+            customer = CustomerDAO(name=name)
             session.add(customer)
             await session.commit()
             await session.refresh(customer)
@@ -66,7 +66,7 @@ class CustomerRepository:
             result = await session.execute(select(CustomerDAO))
             return result.scalars().all()
 
-    async def update_customers(self, customer_id: int, updated_name: str, updated_card: LoyalityCardDAO | None) -> CustomerDAO | None:
+    async def update_customers(self, customer_id: int, updated_name: str) -> CustomerDAO | None:
         """
         Update customer information. Throw NotFoundError if not found or ConflictError if the new name exists
         """
@@ -84,8 +84,6 @@ class CustomerRepository:
             )
 
             db_customer.name = updated_name
-            if db_customer.card is not None and updated_card is not None:
-                db_customer.card = updated_card
 
             await session.commit()
             await session.refresh(db_customer)

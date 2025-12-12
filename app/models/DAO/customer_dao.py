@@ -9,5 +9,5 @@ class CustomerDAO(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, unique=True)
-    card_id = Column(Integer, ForeignKey("loyality_cards.card_id"), unique=True, nullable=True)
-    card = relationship("LoyalityCardDAO", backref="customer", uselist=False)
+    card_id = Column(Integer, ForeignKey("loyality_cards.card_id"), nullable=True)
+    card = relationship("LoyalityCardDAO", backref="customer", uselist=False, lazy="joined")
