@@ -4,6 +4,8 @@ from app.models.DTO.token_dto import TokenDTO
 from app.models.DTO.error_dto import ErrorDTO
 from app.models.DAO.customer_dao import CustomerDAO
 from app.models.DTO.customer_dto import CustomerDTO
+from app.models.DTO.loyality_card_dto import LoyalityCardDTO
+from app.models.DAO.loyality_card_dao import LoyalityCardDAO
 
 
 def create_error_dto(code: int, message: str, name: str) -> ErrorDTO:
@@ -28,8 +30,21 @@ def userdao_to_responsedto(user_dao: UserDAO) -> UserDTO:
         type=user_dao.type
     )
 
-def customerdao_to_responsedto(customer_dao: CustomerDAO) -> CustomerDTO:
+def get_customer_details(customer_dao: CustomerDAO) -> CustomerDTO:
+    card_dto = None
+    if customer_dao.card:
+        card_dto = LoyalityCardDTO(
+            card_id=str(customer_dao.card.card_id),
+            points=customer_dao.card.points
+        )
     return CustomerDTO(
         id=customer_dao.id,
-        name=customer_dao.name
+        name=customer_dao.name,
+        card=card_dto
+    )
+
+def carddao_to_carddto(card_dao: LoyalityCardDAO) -> LoyalityCardDTO:
+    return LoyalityCardDTO(
+        card_id=str(card_dao.card_id),
+        points=card_dao.points
     )

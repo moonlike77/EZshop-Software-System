@@ -1,23 +1,24 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List
-from app.models.DTO.customer_dto import CustomerDTO, CustomerResponseDTO, CustomerCreateDTO
+from app.models.DTO.customer_dto import CustomerDTO
 from app.controllers.customer_controller import CustomerController
-#from app.middleware.auth_middleware import authenticate_user
+from app.middleware.auth_middleware import authenticate_user
 from app.config.config import ROUTES
 from fastapi import Response
 from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.bad_request import BadRequestError
+from app.models.user_type import UserType
 
 
 router = APIRouter(prefix=ROUTES['V1_CUSTOMERS'], tags=["customers"])
 controller = CustomerController()
 
 @router.post("/", 
-    response_model=CustomerResponseDTO, 
-    status_code=status.HTTP_201_CREATED
-    #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+    response_model=CustomerDTO, 
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
     )
-async def create_customer(customer: CustomerCreateDTO):
+async def create_customer(customer: CustomerDTO):
     """
     Create a new customer.
 
@@ -32,8 +33,8 @@ async def create_customer(customer: CustomerCreateDTO):
         raise BadRequestError('Name is a mandatory field')
     return await controller.create_customer(customer)
     
-@router.get("/", response_model=List[CustomerResponseDTO]
-            #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+@router.get("/", response_model=List[CustomerDTO],
+            dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
             )
 async def list_customers():
     """
@@ -46,8 +47,8 @@ async def list_customers():
     return await controller.list_customers()
 
 
-@router.get("/{customer_id}", response_model=CustomerResponseDTO
-            #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+@router.get("/{customer_id}", response_model=CustomerDTO,
+            dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
             )
 async def get_customer(customer_id: int):
     """
@@ -66,9 +67,9 @@ async def get_customer(customer_id: int):
     return customer
 
 
-@router.put("/{customer_id}", response_model=CustomerResponseDTO, 
+@router.put("/{customer_id}", response_model=CustomerDTO, 
     status_code=status.HTTP_201_CREATED,
-    #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+    dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
     )
 async def update_customer(customer_id: int, customer: CustomerDTO):
     """
@@ -89,8 +90,8 @@ async def update_customer(customer_id: int, customer: CustomerDTO):
 
 
 @router.delete("/{customer_id}", 
-               status_code=status.HTTP_204_NO_CONTENT
-               #dependencies=[Depends(authenticate_customer([customerType.Administrator]))]
+               status_code=status.HTTP_204_NO_CONTENT,
+               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
                )
 async def delete_customer(customer_id: int):
     """

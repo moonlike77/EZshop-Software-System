@@ -14,18 +14,18 @@ class LoyalityCardRepository:
     async def _get_session(self) -> AsyncSession:
         return self._session or AsyncSessionLocal()
 
-    async def create_loyality_card(self, loyality_card_id: str) -> LoyalityCardDAO:
+    async def create_loyality_card(self) -> LoyalityCardDAO:
         """
         Create loyality card or throw ConflictError if name exists
         """
         async with await self._get_session() as session:
-            loyality_card = LoyalityCardDAO(card_id=loyality_card_id, points=0)
+            loyality_card = LoyalityCardDAO(points=0)
             session.add(loyality_card)
             await session.commit()
             await session.refresh(loyality_card)
             return loyality_card
 
-    async def get_loyality_card(self, loyality_card_id: str) -> LoyalityCardDAO | None:
+    async def get_loyality_card(self, loyality_card_id: int) -> LoyalityCardDAO | None:
         """
         Get loyality card by id or throw NotFoundError if not found
         """
@@ -43,7 +43,7 @@ class LoyalityCardRepository:
 #            result = await session.execute(select(LoyalityCardDAO))
 #            return result.scalars().all()
 
-    async def update_loyality_card(self, loyality_card_id: str, updated_points: int) -> LoyalityCardDAO | None:
+    async def update_loyality_card_points(self, loyality_card_id: int, updated_points: int) -> LoyalityCardDAO | None:
         """
         Update loyality card information. Throw NotFoundError if not found
         """
@@ -58,7 +58,7 @@ class LoyalityCardRepository:
             await session.refresh(db_loyality_card)
             return db_loyality_card
 
-    async def delete_loyality_card(self, loyality_card_id: str) -> bool:
+    async def delete_loyality_card(self, loyality_card_id: int) -> bool:
         """
         Delete loyality card by id. Will throw NotFoundError if loyality_card doesn't exist
         """

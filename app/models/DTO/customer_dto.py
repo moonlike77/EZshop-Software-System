@@ -6,11 +6,3 @@ class CustomerDTO(BaseModel):
     id: Optional[int] = None
     name: str = Field(min_length=5)
     card: Optional[LoyalityCardDTO] = None
-
-class CustomerResponseDTO(BaseModel):
-    id: Optional[int] = None
-    name: str
-
-class CustomerCreateDTO(BaseModel):
-    id: Optional[int] = None
-    name: str = Field(min_length=5)
