@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 from app.database.database import Base
-from app.models.DTO.loyality_card_dto import LoyalityCardDTO
+from app.models.DAO.loyality_card_dao import LoyalityCardDAO
+from sqlalchemy.orm import relationship
 
 
 class CustomerDAO(Base):
@@ -8,4 +9,5 @@ class CustomerDAO(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, unique=True)
-    #card = Column(LoyalityCardDTO, nullable=True)
+    card_id = Column(Integer, ForeignKey("loyality_cards.card_id"), unique=True, nullable=True)
+    card = relationship("LoyalityCardDAO", backref="customer", uselist=False)
