@@ -4,7 +4,8 @@ from app.models.DAO.customer_dao import CustomerDAO
 from app.utils import throw_conflict_if_found, find_or_throw_not_found
 from app.database.database import AsyncSessionLocal
 from typing import Optional
-from app.models.DAO.loyality_card_dao import LoyalityCardDAO
+from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
+from app.models.errors.notfound_error import NotFoundError
 
 
 class CustomerRepository:
@@ -73,7 +74,10 @@ class CustomerRepository:
         async with await self._get_session() as session:
             db_customer = await session.get(CustomerDAO, customer_id)
             if not db_customer:
-                return None
+                return find_or_throw_not_found(
+                [],
+                lambda _: True,
+                f"Customer with id '{customer_id}' not found")
 
             result_conflict = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == updated_name))
             conflicting_name = result_conflict.scalars().all()
@@ -89,14 +93,17 @@ class CustomerRepository:
             await session.refresh(db_customer)
             return db_customer
         
-    async def update_customer_card(self, customer_id: int, updated_card: LoyalityCardDAO) -> CustomerDAO | None:
+    async def update_customer_card(self, customer_id: int, updated_card: LoyaltyCardDAO) -> CustomerDAO | None:
         """
-        Update customer information. Throw NotFoundError if not found or ConflictError if the new name exists
+        Update customer's loyality card's points. Throw NotFoundError if customer not found
         """
         async with await self._get_session() as session:
             db_customer = await session.get(CustomerDAO, customer_id)
             if not db_customer:
-                return None
+                return find_or_throw_not_found(
+                [],
+                lambda _: True,
+                f"Customer with id '{customer_id}' not found")
 
             db_customer.card = updated_card
 

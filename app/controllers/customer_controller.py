@@ -1,13 +1,13 @@
 from typing import List, Optional
 from app.repositories.customer_repository import CustomerRepository
-from app.repositories.loyality_card_repository import LoyalityCardRepository
+from app.repositories.loyalty_card_repository import LoyaltyCardRepository
 from app.models.DTO.customer_dto import CustomerDTO
 from app.services.mapper_service import get_customer_details
 
 class CustomerController:
     def __init__(self):
         self.repo = CustomerRepository()
-        self.card_repo = LoyalityCardRepository()
+        self.card_repo = LoyaltyCardRepository()
 
     async def create_customer(self, Customer_dto: CustomerDTO) -> CustomerDTO: 
         """Create Customer - throws ConflictError if Customername exists"""
@@ -30,7 +30,7 @@ class CustomerController:
         return get_customer_details(updated) if updated else None
     
     async def attach_loyality_card_to_customer(self, customer_id: int, card_id: str) -> Optional[CustomerDTO]:
-        card = await self.card_repo.get_loyality_card(int(card_id.lstrip('0')))
+        card = await self.card_repo.get_loyalty_card(int(card_id.lstrip('0')))
         attached = await self.repo.update_customer_card(customer_id, card)
         return get_customer_details(attached) if attached else None
 

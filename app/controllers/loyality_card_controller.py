@@ -1,27 +1,27 @@
 from typing import List, Optional
-from app.repositories.loyality_card_repository import LoyalityCardRepository
-from app.models.DTO.loyality_card_dto import LoyalityCardDTO
+from app.repositories.loyalty_card_repository import LoyaltyCardRepository
+from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 from app.services.mapper_service import carddao_to_carddto
 
-class LoyalityCardController:
+class LoyaltyCardController:
     def __init__(self):
-        self.repo = LoyalityCardRepository()
+        self.repo = LoyaltyCardRepository()
 
-    async def create_loyality_card(self) -> LoyalityCardDTO: 
-        """Create loyality_card - throws ConflictError if loyality_cardname exists"""
-        created = await self.repo.create_loyality_card()
+    async def create_loyalty_card(self) -> LoyaltyCardDTO: 
+        """Create loyalty_card - throws ConflictError if loyalty_cardname exists"""
+        created = await self.repo.create_loyalty_card()
         return carddao_to_carddto(created)
 
-    async def get_loyality_card(self, loyality_card_id: int) -> Optional[LoyalityCardDTO]:
-        """Get loyality_card by loyality_cardname - throws NotFoundError if not found"""
-        dao = await self.repo.get_loyality_card(loyality_card_id)
+    async def get_loyalty_card(self, loyalty_card_id: int) -> Optional[LoyaltyCardDTO]:
+        """Get loyalty_card by loyalty_cardname - throws NotFoundError if not found"""
+        dao = await self.repo.get_loyalty_card(loyalty_card_id)
         return carddao_to_carddto(dao) if dao else None
 
-    async def update_loyality_card_points(self, loyality_card_id: int, loyality_card_points: int) -> Optional[LoyalityCardDTO]:
-        """Update loyality_card - throws NotFoundError if loyality_card doesn't exist, ConflictError if new loyality_cardname exists"""
-        updated = await self.repo.update_loyality_card_points(loyality_card_id, loyality_card_points)
+    async def update_loyalty_card_points(self, loyalty_card_id: int, loyalty_card_points: int) -> Optional[LoyaltyCardDTO]:
+        """Update loyalty_card - throws NotFoundError if loyalty_card doesn't exist, ConflictError if new loyalty_cardname exists"""
+        updated = await self.repo.update_loyalty_card_points(loyalty_card_id, loyalty_card_points)
         return carddao_to_carddto(updated) if updated else None
 
-    async def delete_loyality_card(self, loyality_card_id: int) -> bool:
-        """Delete loyality_card - throws NotFoundError if not found"""
-        return await self.repo.delete_loyality_card(loyality_card_id)
+    async def delete_loyalty_card(self, loyalty_card_id: int) -> bool:
+        """Delete loyalty_card - throws NotFoundError if not found"""
+        return await self.repo.delete_loyalty_card(loyalty_card_id)

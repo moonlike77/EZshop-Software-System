@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
 from typing import List
 from app.models.DTO.customer_dto import CustomerDTO
-from app.models.DTO.loyality_card_dto import LoyalityCardDTO
+from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 from app.controllers.customer_controller import CustomerController
-from app.controllers.loyality_card_controller import LoyalityCardController
+from app.controllers.loyality_card_controller import LoyaltyCardController
 from app.middleware.auth_middleware import authenticate_user
 from app.config.config import ROUTES
 from fastapi import Response
@@ -14,7 +14,7 @@ from app.models.user_type import UserType
 
 router = APIRouter(prefix=ROUTES['V1_CUSTOMERS'], tags=["customers"])
 controller = CustomerController()
-card_controller = LoyalityCardController()
+card_controller = LoyaltyCardController()
 
 @router.post("/", 
     response_model=CustomerDTO, 
@@ -113,12 +113,12 @@ async def delete_customer(customer_id: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.post("/cards", 
-    response_model=LoyalityCardDTO, 
+    response_model=LoyaltyCardDTO, 
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
     )
 async def create_loyality_card():
-    return await card_controller.create_loyality_card()
+    return await card_controller.create_loyalty_card()
 
 @router.patch("/{customer_id}/attach-card/{card_id}",
               response_model=CustomerDTO,
@@ -128,7 +128,7 @@ async def create_loyality_card():
 async def attach_card(customer_id: int, card_id: str):
     return await controller.attach_loyality_card_to_customer(customer_id, card_id)
 
-@router.patch("/cards/{card_id}", response_model=LoyalityCardDTO, status_code=status.HTTP_200_OK,
+@router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_200_OK,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))])
 async def update_points(card_id: int, points: int = Query(...)):
-    return await card_controller.update_loyality_card_points(card_id, points)
+    return await card_controller.update_loyalty_card_points(card_id, points)
