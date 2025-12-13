@@ -88,6 +88,21 @@ class CustomerRepository:
             await session.commit()
             await session.refresh(db_customer)
             return db_customer
+        
+    async def update_customer_card(self, customer_id: int, updated_card: LoyalityCardDAO) -> CustomerDAO | None:
+        """
+        Update customer information. Throw NotFoundError if not found or ConflictError if the new name exists
+        """
+        async with await self._get_session() as session:
+            db_customer = await session.get(CustomerDAO, customer_id)
+            if not db_customer:
+                return None
+
+            db_customer.card = updated_card
+
+            await session.commit()
+            await session.refresh(db_customer)
+            return db_customer
 
     async def delete_customer(self, customer_id: int) -> bool:
         """

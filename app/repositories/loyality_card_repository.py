@@ -52,7 +52,7 @@ class LoyalityCardRepository:
             if not db_loyality_card:
                 return None
 
-            db_loyality_card.points = updated_points
+            db_loyality_card.points = db_loyality_card.points + updated_points
 
             await session.commit()
             await session.refresh(db_loyality_card)

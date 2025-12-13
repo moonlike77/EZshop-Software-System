@@ -33,10 +33,7 @@ def userdao_to_responsedto(user_dao: UserDAO) -> UserDTO:
 def get_customer_details(customer_dao: CustomerDAO) -> CustomerDTO:
     card_dto = None
     if customer_dao.card:
-        card_dto = LoyalityCardDTO(
-            card_id=str(customer_dao.card.card_id),
-            points=customer_dao.card.points
-        )
+        card_dto = carddao_to_carddto(customer_dao.card)
     return CustomerDTO(
         id=customer_dao.id,
         name=customer_dao.name,
@@ -44,7 +41,9 @@ def get_customer_details(customer_dao: CustomerDAO) -> CustomerDTO:
     )
 
 def carddao_to_carddto(card_dao: LoyalityCardDAO) -> LoyalityCardDTO:
+    card_id_int = card_dao.card_id
+    card_id_str = str(card_id_int).zfill(10)
     return LoyalityCardDTO(
-        card_id=str(card_dao.card_id),
+        card_id=card_id_str,
         points=card_dao.points
     )

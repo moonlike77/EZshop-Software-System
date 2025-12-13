@@ -3,7 +3,7 @@ from app.repositories.loyality_card_repository import LoyalityCardRepository
 from app.models.DTO.loyality_card_dto import LoyalityCardDTO
 from app.services.mapper_service import carddao_to_carddto
 
-class loyality_cardController:
+class LoyalityCardController:
     def __init__(self):
         self.repo = LoyalityCardRepository()
 
