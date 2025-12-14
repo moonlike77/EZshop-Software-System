@@ -142,6 +142,7 @@ async def attach_card(customer_id: int, card_id: str):
     - Returns: CustomerDTO of the customer with card attached
     - Raises:
       - NotFoundError: when the customer does not exist or when the card does not exist
+      - ConflictError: when the card is associated to the same customer or some other customer
     - Status code: 200 OK
     """
     attached =  await controller.attach_loyality_card_to_customer(customer_id, card_id)
