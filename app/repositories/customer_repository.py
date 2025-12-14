@@ -98,7 +98,7 @@ class CustomerRepository:
                 lambda _: True,
                 f"Loyalty card with id '{updated_card.card_id}' not found")
             
-            if updated_card.customer is not None:
+            if updated_card.customer:
                 if updated_card.customer[0].id==db_customer.id:
                     throw_conflict_if_found(
                     updated_card.customer,
