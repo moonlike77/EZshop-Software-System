@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
 from app.utils import find_or_throw_not_found
 from app.database.database import AsyncSessionLocal
@@ -30,9 +31,12 @@ class LoyaltyCardRepository:
         Get loyalty card by id or throw NotFoundError if not found
         """
         async with await self._get_session() as session:
-            loyalty_card = await session.get(LoyaltyCardDAO, loyalty_card_id)
+            loyalty_card = await session.execute(select(LoyaltyCardDAO)
+                                                 .options(joinedload(LoyaltyCardDAO.customer))
+                                                 .filter(LoyaltyCardDAO.card_id == loyalty_card_id))
+            card_dao = loyalty_card.scalars().first()
             return find_or_throw_not_found(
-                [loyalty_card] if loyalty_card else [],
+                [card_dao] if card_dao else [],
                 lambda _: True,
                 f"loyalty card with id '{loyalty_card_id}' not found"
             )

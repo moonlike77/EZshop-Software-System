@@ -82,7 +82,7 @@ class CustomerRepository:
         
     async def update_customer_card(self, customer_id: int, updated_card: LoyaltyCardDAO) -> CustomerDAO | None:
         """
-        Update customer's loyality card. Throw NotFoundError if customer not found
+        Update customer's loyality card. Throw NotFoundError if customer not found or ConflictError if card already attached to some or same customer
         """
         async with await self._get_session() as session:
             db_customer = await session.get(CustomerDAO, customer_id)
@@ -91,7 +91,27 @@ class CustomerRepository:
                 [],
                 lambda _: True,
                 f"Customer with id '{customer_id}' not found")
-
+            
+            if not updated_card:
+                return find_or_throw_not_found(
+                [],
+                lambda _: True,
+                f"Loyalty card with id '{updated_card.card_id}' not found")
+            
+            if updated_card.customer is not None:
+                if updated_card.customer[0].id==db_customer.id:
+                    throw_conflict_if_found(
+                    updated_card.customer,
+                    lambda _: True,
+                    f"Loyalty card with id '{updated_card.card_id}' is already attached to this customer"
+                    )
+                else:
+                    throw_conflict_if_found(
+                    updated_card.customer,
+                    lambda _: True,
+                    f"Loyalty card with id '{updated_card.card_id}' is already attached to a customer"
+                    )
+            
             db_customer.card = updated_card
 
             await session.commit()

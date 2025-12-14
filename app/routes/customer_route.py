@@ -8,6 +8,7 @@ from app.middleware.auth_middleware import authenticate_user
 from app.config.config import ROUTES
 from fastapi import Response
 from app.models.errors.notfound_error import NotFoundError
+from app.models.errors.conflict_error import ConflictError
 from app.models.errors.bad_request import BadRequestError
 from app.models.user_type import UserType
 
@@ -143,7 +144,10 @@ async def attach_card(customer_id: int, card_id: str):
       - NotFoundError: when the customer does not exist or when the card does not exist
     - Status code: 200 OK
     """
-    return await controller.attach_loyality_card_to_customer(customer_id, card_id)
+    attached =  await controller.attach_loyality_card_to_customer(customer_id, card_id)
+    if not attached:
+        raise ConflictError("Card already attached")
+    return attached
 
 @router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_200_OK,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))])
