@@ -39,7 +39,7 @@ class LoyaltyCardRepository:
 
     async def update_loyalty_card_points(self, loyalty_card_id: int, updated_points: int) -> LoyaltyCardDAO | None:
         """
-        Update loyalty card information. Throw NotFoundError if not found
+        Update loyalty card points. Throw NotFoundError if not found
         """
         async with await self._get_session() as session:
             db_loyalty_card = await session.get(LoyaltyCardDAO, loyalty_card_id)

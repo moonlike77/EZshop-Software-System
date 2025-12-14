@@ -48,19 +48,6 @@ class CustomerRepository:
                 f"Customer with id '{customer_id}' not found"
             )
 
-    async def get_customer_by_name(self, name: str) -> CustomerDAO | None:
-        """
-        Get customer by name or throw NotFoundError if not found
-        """
-        async with await self._get_session() as session:
-            result = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == name))
-            customers = result.scalars().all()
-            return find_or_throw_not_found(
-                customers,
-                lambda _: True,
-                f"Customer with name '{name}' not found"
-            )
-
     async def list_customers(self) -> list[CustomerDAO]:
         """Get all customers"""
         async with await self._get_session() as session:
@@ -95,7 +82,7 @@ class CustomerRepository:
         
     async def update_customer_card(self, customer_id: int, updated_card: LoyaltyCardDAO) -> CustomerDAO | None:
         """
-        Update customer's loyality card's points. Throw NotFoundError if customer not found
+        Update customer's loyality card. Throw NotFoundError if customer not found
         """
         async with await self._get_session() as session:
             db_customer = await session.get(CustomerDAO, customer_id)

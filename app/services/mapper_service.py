@@ -30,7 +30,7 @@ def userdao_to_responsedto(user_dao: UserDAO) -> UserDTO:
         type=user_dao.type
     )
 
-def get_customer_details(customer_dao: CustomerDAO) -> CustomerDTO:
+def customerdao_to_dto(customer_dao: CustomerDAO) -> CustomerDTO:
     card_dto = None
     if customer_dao.card:
         card_dto = carddao_to_carddto(customer_dao.card)

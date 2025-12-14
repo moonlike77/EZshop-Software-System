@@ -25,11 +25,11 @@ async def create_customer(customer: CustomerDTO):
     """
     Create a new customer.
 
-    - Permissions: Administrator
-    - Request body: customerCreateDTO (contains customername, password, type, ...)
-    - Returns: Created customer as customerResponseDTO
+    - Permissions: Administrator, Cashier, ShopManager
+    - Request body: CustomerCreateDTO (contains name and card will be initially null)
+    - Returns: Created customer as CustomerDTO
     - Raises:
-      - BadRequestError: when mandatory fields (password, type) are missing or invalid
+      - BadRequestError: when mandatory field (name) is missing or invalid
     - Status code: 201 Created
     """
     if customer.name is None or customer.name == '':
@@ -43,8 +43,8 @@ async def list_customers():
     """
     List all customers.
 
-    - Permissions: Administrator
-    - Returns: List of customerResponseDTO
+    - Permissions: Administrator, Cashier, ShopManager
+    - Returns: List of CustomerDTO
     - Status code: 200 OK
     """
     return await controller.list_customers()
@@ -57,9 +57,9 @@ async def get_customer(customer_id: int):
     """
     Retrieve a single customer by ID.
 
-    - Permissions: Administrator
+    - Permissions: Administrator, Cashier, ShopManager
     - Path parameter: customer_id (int)
-    - Returns: customerResponseDTO for the requested customer
+    - Returns: CustomerDTO for the requested customer
     - Raises:
       - NotFoundError: when the customer does not exist
     - Status code: 200 OK
@@ -78,10 +78,10 @@ async def update_customer(customer_id: int, customer: CustomerDTO):
     """
     Update an existing customer.
 
-    - Permissions: Administrator
+    - Permissions: Administrator, Cashier, ShopManager
     - Path parameter: customer_id (int)
-    - Request body: customerDTO (fields to update)
-    - Returns: Updated customer as customerResponseDTO
+    - Request body: CustomerDTO (fields to update)
+    - Returns: Updated customer as CustomerDTO
     - Raises:
       - NotFoundError: when the customer to update does not exist
     - Status code: 201 Created
@@ -100,7 +100,7 @@ async def delete_customer(customer_id: int):
     """
     Delete a customer by ID.
 
-    - Permissions: Administrator
+    - Permissions: Administrator, Cashier, ShopManager
     - Path parameter: customer_id (int)
     - Returns: No content (204) on success
     - Raises:
@@ -118,6 +118,13 @@ async def delete_customer(customer_id: int):
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
     )
 async def create_loyality_card():
+    """
+    Create a loyalty card.
+
+    - Permissions: Administrator, Cashier, ShopManager
+    - Body: no body because cards are created with sequential ids and points start from 0
+    - Status code: 201 Created
+    """
     return await card_controller.create_loyalty_card()
 
 @router.patch("/{customer_id}/attach-card/{card_id}",
@@ -126,9 +133,29 @@ async def create_loyality_card():
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
               )
 async def attach_card(customer_id: int, card_id: str):
+    """
+    Attach a loyalty card to a customer.
+
+    - Permissions: Administrator, Cashier, ShopManager
+    - Path parameter: customer_id (int), card_id (int)
+    - Returns: CustomerDTO of the customer with card attached
+    - Raises:
+      - NotFoundError: when the customer does not exist or when the card does not exist
+    - Status code: 200 OK
+    """
     return await controller.attach_loyality_card_to_customer(customer_id, card_id)
 
 @router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_200_OK,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))])
 async def update_points(card_id: int, points: int = Query(...)):
+    """
+    Update points on a loyalty card.
+
+    - Permissions: Administrator, Cashier, ShopManager
+    - Path parameter: card_id (int)
+    - Returns: LoyaltyCardDTO
+    - Raises:
+      - NotFoundError: when the card does not exist
+    - Status code: 200 OK
+    """
     return await card_controller.update_loyalty_card_points(card_id, points)
