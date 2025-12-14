@@ -11,6 +11,7 @@ from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.invalid_state_error import InvalidStateError
 from app.models.errors.bad_request import BadRequestError
 from app.models.DAO.system_dao import SystemInfoDAO
+from app.models.DAO.product_type_dao import ProductTypeDAO   # Imported from Products module (available after merge)
 
 
 class SaleRepository:
@@ -64,32 +65,45 @@ class SaleRepository:
                     raise NotFoundError(f"Sale with id '{sale_id}' not found")
 
             return sale
+        
 
-    
-    
     async def delete_sale(self, sale_id: int) -> bool:
         """Delete a sale by id"""
         async with await self._get_session() as session:
-            sale = await session.get(SaleDAO, sale_id)
+           sale = await session.get(SaleDAO, sale_id)
 
-            sale = find_or_throw_not_found(
-                [sale] if sale else [],
+        sale = find_or_throw_not_found(
+            [sale] if sale else [],
+            lambda _: True,
+            f"Sale with id '{sale_id}' not found"
+        )
+
+        if sale.status == SaleStatus.PAID:
+            raise ConflictError("Sale cannot be deleted because it is already PAID")
+
+        # restore stock quantities for all lines in the sale
+        result = await session.execute(
+            select(SaleLineDAO).where(SaleLineDAO.sale_id == sale.id)
+        )
+        lines = result.scalars().all()
+
+        for line in lines:
+            prod_res = await session.execute(
+                select(ProductTypeDAO).where(ProductTypeDAO.barcode == line.product_barcode)
+            )
+            product = prod_res.scalars().first()
+
+            product = find_or_throw_not_found(
+                [product] if product else [],
                 lambda _: True,
-                f"Sale with id '{sale_id}' not found"
+                f"Product with barcode '{line.product_barcode}' not found"
             )
 
-            if sale.status == SaleStatus.PAID:
-                raise ConflictError("Sale cannot be deleted because it is already PAID")
+            product.quantity += line.quantity
 
-            # TODO: RESTORE STOCK QUANTITIES
-            # Example:
-            # product_repo = ProductRepository()
-            # for line in sale.lines:
-            #     await product_repo.increase_quantity(line.product_barcode, line.quantity)
-
-            await session.delete(sale)
-            await session.commit()
-            return True
+        await session.delete(sale)
+        await session.commit()
+        return True
 
 
     async def add_product_to_sale(self, sale_id: int, barcode: str, amount: int) -> bool:
@@ -103,28 +117,38 @@ class SaleRepository:
                 [sale] if sale else [],
                 lambda _: True,
                 f"Sale with id '{sale_id}' not found"
-            )
+        )
 
-            if sale.status != SaleStatus.OPEN:
-                raise InvalidStateError("Cannot modify a closed sale")
+        if sale.status != SaleStatus.OPEN:
+            raise InvalidStateError("Cannot modify a closed sale")
 
-            # TODO: CHECK THAT THE PRODUCT EXISTS AND HAS SUFFICIENT STOCK
-            # Example:
-            # product = await product_repo.get_by_barcode(barcode)
-            # if product is None: raise NotFoundError("Product not found")
-            # if product.quantity < amount: raise ConflictError("Insufficient stock")
-            # await product_repo.decrease_quantity(barcode, amount)
+        # product exists + stock check + decrease stock
+        prod_res = await session.execute(
+            select(ProductTypeDAO).where(ProductTypeDAO.barcode == barcode)
+        )
+        product = prod_res.scalars().first()
 
-            line = SaleLineDAO(
-                sale_id=sale.id,
-                product_barcode=barcode,
-                quantity=amount,
-                price_per_unit=0.0,   # TODO: price_per_unit = product.price
-                discount_rate=0.0
-            )
-            session.add(line)
-            await session.commit()
-            return True
+        product = find_or_throw_not_found(
+            [product] if product else [],
+            lambda _: True,
+            f"Product with barcode '{barcode}' not found"
+        )
+
+        if product.quantity < amount:
+            raise ConflictError("Insufficient stock")
+
+        product.quantity -= amount
+
+        line = SaleLineDAO(
+            sale_id=sale.id,
+            product_barcode=barcode,
+            quantity=amount,
+            price_per_unit=product.price_per_unit,  
+            discount_rate=0.0
+        )
+        session.add(line)
+        await session.commit()
+        return True
 
 
     async def remove_product_from_sale(self, sale_id: int, barcode: str, amount: int) -> bool:
@@ -138,31 +162,44 @@ class SaleRepository:
                 [sale] if sale else [],
                 lambda _: True,
                 f"Sale with id '{sale_id}' not found"
+        )
+
+        if sale.status != SaleStatus.OPEN:
+            raise InvalidStateError("Cannot modify a closed sale")
+
+        result = await session.execute(
+            select(SaleLineDAO).where(
+                SaleLineDAO.sale_id == sale.id,
+                SaleLineDAO.product_barcode == barcode
             )
+        )
+        line = result.scalars().first()
 
-            if sale.status != SaleStatus.OPEN:
-                raise InvalidStateError("Cannot modify a closed sale")
+        if not line:
+            raise NotFoundError("Product not found in sale")
 
-            result = await session.execute(
-                select(SaleLineDAO).where(
-                    SaleLineDAO.sale_id == sale.id,
-                    SaleLineDAO.product_barcode == barcode
-                )
-            )
-            line = result.scalars().first()
+        # restore stock
+        prod_res = await session.execute(
+            select(ProductTypeDAO).where(ProductTypeDAO.barcode == barcode)
+        )
+        product = prod_res.scalars().first()
 
-            if not line:
-                raise NotFoundError("Product not found in sale")
+        product = find_or_throw_not_found(
+            [product] if product else [],
+            lambda _: True,
+            f"Product with barcode '{barcode}' not found"
+        )
 
-            # TODO: UPDATE STOCK: PUT THE AMOUNT (OR THE ENTIRE QUANTITY) BACK ON THE SHELF
+        restore_qty = min(amount, line.quantity)
+        product.quantity += restore_qty
 
-            if amount >= line.quantity:
-                await session.delete(line)
-            else:
-                line.quantity -= amount
+        if amount >= line.quantity:
+            await session.delete(line)
+        else:
+            line.quantity -= amount
 
-            await session.commit()
-            return True
+        await session.commit()
+        return True
         
 
     async def apply_discount(self, sale_id: int, discount_rate: float) -> bool:

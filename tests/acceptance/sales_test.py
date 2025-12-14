@@ -37,6 +37,25 @@ def auth_tokens():
         assert resp.status_code == 200, f"Login failed for {role}"
         tokens[role] = f"Bearer {resp.json()['token']}"
 
+        # -------------------------------------------------
+    # CREATE A TEST PRODUCT (needed by sales tests)
+    # -------------------------------------------------
+    create_product_resp = client.post(
+        PRODUCTS_URL + "/",
+        headers={"Authorization": tokens["admin"]},
+        json={
+            "description": "Test product",
+            "barcode": PRODUCT_BARCODE,
+            "price_per_unit": 10.0,
+            "note": None,
+            "quantity": 100,
+            "position": None,
+        },
+    )
+
+    # 201 = created, 409 = already exists (both OK)
+    assert create_product_resp.status_code in (201, 409), create_product_resp.text
+
     return tokens
 
 

@@ -35,3 +35,4 @@ ROUTES = {
 
 # App configuration
 APP_PORT = int(os.getenv("PORT", 5000))
+
