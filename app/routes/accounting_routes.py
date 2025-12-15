@@ -29,8 +29,11 @@ async def get_balance(
     balance = await controller.get_current_balance()
     return BalanceResponseDTO(balance=balance)
 
+from app.models.DTO.base_response_dto import SuccessResponseDTO
+
 @router.post("/balance/set", 
-    status_code=status.HTTP_201_CREATED)
+    status_code=status.HTTP_201_CREATED,
+    response_model=SuccessResponseDTO)
 async def set_balance(
     amount: float = Query(..., description="The amount to set the balance to"),
     current_user: UserDTO = Depends(authenticate_user(ALLOWED_ROLES))
@@ -41,13 +44,14 @@ async def set_balance(
     """
     try:
         await controller.set_balance(amount, current_user.id)
-        return None
+        return SuccessResponseDTO(success=True)
     except ValueError as e:
         from fastapi import HTTPException
         raise HTTPException(status_code=421, detail=str(e))
 
 @router.post("/balance/reset", 
-    status_code=status.HTTP_205_RESET_CONTENT)
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessResponseDTO)
 async def reset_balance(
     current_user: UserDTO = Depends(authenticate_user(ALLOWED_ROLES))
 ):
@@ -56,4 +60,4 @@ async def reset_balance(
     Creates a correction transaction.
     """
     await controller.reset_balance(current_user.id)
-    return None
+    return SuccessResponseDTO(success=True)

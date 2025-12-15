@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from app.models.transaction_type import TransactionType
 from datetime import datetime
 
@@ -15,9 +15,7 @@ class TransactionResponseDTO(BaseModel):
     timestamp: datetime
     created_by: int | None
 
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class BalanceResponseDTO(BaseModel):
     balance: float

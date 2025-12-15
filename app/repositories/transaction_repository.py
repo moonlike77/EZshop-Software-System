@@ -63,6 +63,7 @@ class TransactionRepository:
 
     async def get_balance(self) -> float:
         async with await self._get_session() as session:
+            result = await session.execute(select(SystemInfoDAO).limit(1))
             system_info = result.scalars().first()
             return system_info.balance if system_info else 0.0
 
