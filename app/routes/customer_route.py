@@ -27,7 +27,7 @@ async def create_customer(customer: CustomerDTO):
     Create a new customer.
 
     - Permissions: Administrator, Cashier, ShopManager
-    - Request body: CustomerCreateDTO (contains name and card will be initially null)
+    - Request body: CustomerDTO (contains name and card will be initially null)
     - Returns: Created customer as CustomerDTO
     - Raises:
       - BadRequestError: when mandatory field (name) is missing or invalid

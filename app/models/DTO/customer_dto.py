@@ -4,5 +4,5 @@ from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 
 class CustomerDTO(BaseModel):
     id: Optional[int] = None
-    name: str = Field(min_length=5)
+    name: str
     card: Optional[LoyaltyCardDTO] = None

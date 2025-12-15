@@ -24,9 +24,17 @@ class CustomerController:
         daos = await self.repo.list_customers()
         return [customerdao_to_dto(dao) for dao in daos]
 
-    async def update_customer(self, Customer_id: int, Customer_dto: CustomerDTO) -> Optional[CustomerDTO]:
+    async def update_customer(self, customer_id: int, customer_dto: CustomerDTO) -> Optional[CustomerDTO]:
         """Update Customer - throws NotFoundError if Customer doesn't exist, ConflictError if new name exists"""
-        updated = await self.repo.update_customers(Customer_id, Customer_dto.name)
+        card_before = customerdao_to_dto(await self.repo.get_customer(customer_id)).card
+        if customer_dto.card:
+            new_card = await self.card_repo.get_loyalty_card(customer_dto.card.card_id)
+        else:
+            new_card = None
+        updated = await self.repo.update_customer(customer_id, customer_dto.name, new_card)
+        if card_before is not None and updated.card is None:
+            await self.card_repo.delete_loyalty_card(card_before.card_id)
+
         return customerdao_to_dto(updated) if updated else None
     
     async def attach_loyality_card_to_customer(self, customer_id: int, card_id: str) -> Optional[CustomerDTO]:

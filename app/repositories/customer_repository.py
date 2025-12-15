@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.models.DAO.customer_dao import CustomerDAO
+from app.models.DTO.customer_dto import CustomerDTO
 from app.utils import throw_conflict_if_found, find_or_throw_not_found
 from app.database.database import AsyncSessionLocal
 from typing import Optional
 from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
-from app.models.errors.notfound_error import NotFoundError
 
 
 class CustomerRepository:
@@ -54,7 +54,7 @@ class CustomerRepository:
             result = await session.execute(select(CustomerDAO))
             return result.scalars().all()
 
-    async def update_customers(self, customer_id: int, updated_name: str) -> CustomerDAO | None:
+    async def update_customer(self, customer_id: int, updated_name: str, updated_card: LoyaltyCardDAO | None) -> CustomerDAO | None:
         """
         Update customer information. Throw NotFoundError if not found or ConflictError if the new name exists
         """
@@ -65,6 +65,10 @@ class CustomerRepository:
                 [],
                 lambda _: True,
                 f"Customer with id '{customer_id}' not found")
+            
+            if not updated_card and updated_name == "":
+                db_customer.card = None
+                return db_customer
 
             result_conflict = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == updated_name))
             conflicting_name = result_conflict.scalars().all()
@@ -75,6 +79,8 @@ class CustomerRepository:
             )
 
             db_customer.name = updated_name
+            if updated_card:
+                await self.update_customer_card(db_customer.id, updated_card)
 
             await session.commit()
             await session.refresh(db_customer)
