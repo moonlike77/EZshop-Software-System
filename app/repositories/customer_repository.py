@@ -70,15 +70,16 @@ class CustomerRepository:
                 db_customer.card = None
                 return db_customer
 
-            result_conflict = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == updated_name))
-            conflicting_name = result_conflict.scalars().all()
-            throw_conflict_if_found(
-                conflicting_name,
-                lambda _: True,
-                f"Customer with name '{updated_name}' already exists"
-            )
-
-            db_customer.name = updated_name
+            if (db_customer.name != updated_name):
+                result_conflict = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == updated_name))
+                conflicting_name = result_conflict.scalars().all()
+                throw_conflict_if_found(
+                    conflicting_name,
+                    lambda _: True,
+                    f"Customer with name '{updated_name}' already exists"
+                )
+                db_customer.name = updated_name
+                
             if updated_card:
                 await self.update_customer_card(db_customer.id, updated_card)
 
