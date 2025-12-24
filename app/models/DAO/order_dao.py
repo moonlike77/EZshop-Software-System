@@ -1,34 +1,22 @@
-from __future__ import annotations
-import enum
+from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, Enum
+from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Integer, String, Float, ForeignKey, DateTime, Enum 
+import enum
 from app.database.database import Base
-
-
-class OrderStatusEnum(str, enum.Enum):
-    ISSUED = "ISSUED"
-    PAID = "PAID"
-    COMPLETED = "COMPLETED"
-
+from app.models.order_status import OrderStatus
 
 class OrderDAO(Base):
-    __tablename__= "orders"
+    __tablename__ = "orders"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    product_id = Column(Integer, ForeignKey("product_types.id", ondelete="CASCADE"), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price_per_unit = Column(Float, nullable=False)
+    status = Column(Enum(OrderStatus), nullable=False, default=OrderStatus.Issued)
+    issue_date = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
-    product_barcode: Mapped[str] = mapped_column(String, ForeignKey("product_types.barcode", ondelete= "CASCADE"), nullable=False)
-
-    quantity: Mapped[int] = mapped_column(Integer, nullable = False)
-
-    price_per_unit: Mapped[float] = mapped_column(Float, nullable=False)
-
-    status: Mapped[OrderStatusEnum] = mapped_column(Enum(OrderStatusEnum), nullable=False, default=OrderStatusEnum.ISSUED) # FR4.7: List all orders (issued, payed, completed)
-
-    issue_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default= lambda: datetime.now(timezone.utc),)
-
-    product: Mapped["ProductTypeDAO"] = relationship(
+    product = relationship(
         "ProductTypeDAO",
-        back_populates ="orders",
-        lazy="joined",
-   )
+        back_populates="orders",
+        lazy="joined"
+    )
