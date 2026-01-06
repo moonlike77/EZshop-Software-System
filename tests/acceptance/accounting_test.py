@@ -150,3 +150,59 @@ def test_reset_balance_forbidden_as_cashier(auth_tokens):
 def test_reset_balance_unauthenticated():
     resp = client.post(f"{BALANCE_URL}/reset")
     assert resp.status_code == 401
+
+
+# ---------------------------------------------------------------------
+# VALIDATION TESTS
+# ---------------------------------------------------------------------
+
+def test_validation_transaction_negative_amount():
+    from app.models.DTO.transaction_dto import TransactionCreateDTO
+    from pydantic import ValidationError
+    from app.models.transaction_type import TransactionType
+
+    try:
+        TransactionCreateDTO(
+            amount=-50.0,
+            type=TransactionType.CREDIT,
+            description="Invalid transaction"
+        )
+        assert False, "Should have raised ValidationError"
+    except ValidationError as e:
+        assert "Amount must be positive" in str(e) or "Value error, Amount must be positive" in str(e)
+
+def test_validation_transaction_zero_amount():
+    from app.models.DTO.transaction_dto import TransactionCreateDTO
+    from pydantic import ValidationError
+    from app.models.transaction_type import TransactionType
+
+    try:
+        TransactionCreateDTO(
+            amount=0.0,
+            type=TransactionType.CREDIT,
+            description="Invalid transaction"
+        )
+        assert False, "Should have raised ValidationError"
+    except ValidationError as e:
+        assert "Amount must be positive" in str(e)
+
+@pytest.mark.asyncio
+async def test_validation_get_history_invalid_date_range():
+    # We need to setup DB for controller usage since it uses a repository
+    from app.controllers.accounting_controller import AccountingController
+    from datetime import datetime, timedelta
+    
+    # We can rely on the session fixture or just instantiate if it handles its own session
+    # The controller's __init__ creates a repository, which creates a session on fly.
+    # However, for async tests we need to be in an async loop.
+    
+    controller = AccountingController()
+    
+    start_date = datetime.now()
+    end_date = start_date - timedelta(days=1) # End date before start date
+
+    try:
+        await controller.get_history(start_date, end_date)
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert str(e) == "Start date cannot be after end date"
