@@ -3,12 +3,6 @@ from typing import Optional
 from datetime import datetime
 
 
-class OrderStatusEnum(str):
-    ISSUED = "ISSUED"
-    PAID = "PAID"
-    COMPLETED = "COMPLETED"
-
-
 class OrderCreateDTO(BaseModel):
     product_barcode: str = Field(..., min_length=1)
     quantity: int = Field(..., gt=0)

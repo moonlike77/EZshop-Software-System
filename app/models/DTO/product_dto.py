@@ -1,8 +1,8 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import Optional
 
 
-class ProductTypeCreateDTO(BaseModel):
+class ProductCreateDTO(BaseModel):
     description: str = Field(..., min_length=1)
     barcode: str = Field(..., min_length=1)
     price_per_unit: float = Field(..., gt=0)
@@ -11,7 +11,7 @@ class ProductTypeCreateDTO(BaseModel):
     position: Optional[str] = None
 
 
-class ProductTypeUpdateDTO(BaseModel):
+class ProductUpdateDTO(BaseModel):
     description: Optional[str] = Field(None, min_length=1)
     barcode: Optional[str] = Field(None, min_length=1)
     price_per_unit: Optional[float] = Field(None, gt=0)
@@ -20,7 +20,7 @@ class ProductTypeUpdateDTO(BaseModel):
     position: Optional[str] = None
 
 
-class ProductTypeResponseDTO(BaseModel):
+class ProductResponseDTO(BaseModel):
     id: int
     description: str
     barcode: str
@@ -31,13 +31,3 @@ class ProductTypeResponseDTO(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class ProductTypeDTO(BaseModel):
-    id: Optional[int] = None
-    description: str = Field(..., min_length=1)
-    barcode: str = Field(..., min_length=1)
-    price_per_unit: float
-    note: Optional[str] = Field(None, min_length=1)
-    quantity: Optional[int] = 0 
-    position: Optional[str] = None

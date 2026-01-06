@@ -1,7 +1,6 @@
 from sqlalchemy import Column, Integer, Float, ForeignKey, DateTime, Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-import enum
 from app.database.database import Base
 from app.models.order_status import OrderStatus
 
@@ -16,7 +15,7 @@ class OrderDAO(Base):
     issue_date = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
 
     product = relationship(
-        "ProductTypeDAO",
+        "ProductDAO",
         back_populates="orders",
         lazy="joined"
     )

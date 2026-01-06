@@ -1,13 +1,10 @@
-from sqlalchemy import Column, Integer, String, Float, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.orm import relationship
 from app.database.database import Base
 
-class ProductTypeDAO(Base):
+
+class ProductDAO(Base):
     __tablename__ = "product_types"
-    __table_args__ = (
-        UniqueConstraint("barcode", name="uq_product_types_barcode"),
-        UniqueConstraint("position", name="uq_product_types_position"),
-    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     description = Column(String, nullable=False)
