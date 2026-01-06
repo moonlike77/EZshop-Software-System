@@ -11,7 +11,7 @@ from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.invalid_state_error import InvalidStateError
 from app.models.errors.bad_request import BadRequestError
 from app.models.DAO.system_dao import SystemInfoDAO
-from app.models.DAO.product_type_dao import ProductTypeDAO   # Imported from Products module (available after merge)
+from app.models.DAO.product_dao import ProductDAO 
 
 
 class SaleRepository:
@@ -89,7 +89,7 @@ class SaleRepository:
 
             for line in lines:
                 prod_res = await session.execute(
-                    select(ProductTypeDAO).where(ProductTypeDAO.barcode == line.product_barcode)
+                    select(ProductDAO).where(ProductDAO.barcode == line.product_barcode)
                 )
                 product = prod_res.scalars().first()
  
@@ -124,7 +124,7 @@ class SaleRepository:
 
             # product exists + stock check + decrease stock
             prod_res = await session.execute(
-                select(ProductTypeDAO).where(ProductTypeDAO.barcode == barcode)
+                select(ProductDAO).where(ProductDAO.barcode == barcode)
             )
             product = prod_res.scalars().first()
 
@@ -180,7 +180,7 @@ class SaleRepository:
 
             # restore stock
             prod_res = await session.execute(
-                select(ProductTypeDAO).where(ProductTypeDAO.barcode == barcode)
+                select(ProductDAO).where(ProductDAO.barcode == barcode)
             )
             product = prod_res.scalars().first()
 
