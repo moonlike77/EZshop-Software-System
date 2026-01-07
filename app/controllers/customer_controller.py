@@ -38,7 +38,7 @@ class CustomerController:
 
         return customerdao_to_dto(updated) if updated else None
     
-    async def attach_loyality_card_to_customer(self, customer_id: int, card_id: str) -> Optional[CustomerDTO]:
+    async def attach_loyalty_card_to_customer(self, customer_id: int, card_id: str) -> Optional[CustomerDTO]:
         """Attach a loyalty card to a customer - throws NotFoundError if Customer doesn't exist or Loyalty card doesn't exist
            and ConflictError if card already attached to some or same customer"""
         card = await self.card_repo.get_loyalty_card(int(card_id.lstrip('0')))

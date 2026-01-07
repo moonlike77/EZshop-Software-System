@@ -145,7 +145,7 @@ async def attach_card(customer_id: int, card_id: str):
       - ConflictError: when the card is associated to the same customer or some other customer
     - Status code: 200 OK
     """
-    attached =  await controller.attach_loyality_card_to_customer(customer_id, card_id)
+    attached =  await controller.attach_loyalty_card_to_customer(customer_id, card_id)
     if not attached:
         raise ConflictError("Card already attached")
     return attached
