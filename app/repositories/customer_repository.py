@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.DAO.customer_dao import CustomerDAO
 from app.models.DTO.customer_dto import CustomerDTO
 from app.utils import throw_conflict_if_found, find_or_throw_not_found
@@ -54,7 +55,7 @@ class CustomerRepository:
             result = await session.execute(select(CustomerDAO))
             return result.scalars().all()
 
-    async def update_customer(self, customer_id: int, updated_name: str, updated_card: LoyaltyCardDAO | None) -> CustomerDAO | None:
+    async def update_customer(self, customer_id: int, updated_name: str, card_id: int | None) -> CustomerDAO | None:
         """
         Update customer information. Throw NotFoundError if not found or ConflictError if the new name exists
         """
@@ -66,7 +67,14 @@ class CustomerRepository:
                 lambda _: True,
                 f"Customer with id '{customer_id}' not found")
             
-            if not updated_card and updated_name == "":
+            stmt = (select(LoyaltyCardDAO)
+                    .filter(LoyaltyCardDAO.card_id == card_id)
+                    .options(selectinload(LoyaltyCardDAO.customer)))
+            
+            result = await session.execute(stmt)
+            db_card = result.scalar_one_or_none()
+            
+            if not db_card and updated_name == "":
                 db_customer.card = None
                 return db_customer
 
@@ -80,14 +88,14 @@ class CustomerRepository:
                 )
                 db_customer.name = updated_name
                 
-            if updated_card:
-                await self.update_customer_card(db_customer.id, updated_card)
+            if db_card:
+                await self.update_customer_card(db_customer.id, card_id)
 
             await session.commit()
             await session.refresh(db_customer)
             return db_customer
         
-    async def update_customer_card(self, customer_id: int, updated_card: LoyaltyCardDAO) -> CustomerDAO | None:
+    async def update_customer_card(self, customer_id: int, card_id: int) -> CustomerDAO | None:
         """
         Update customer's loyality card. Throw NotFoundError if customer not found or ConflictError if card already attached to some or same customer
         """
@@ -99,27 +107,34 @@ class CustomerRepository:
                 lambda _: True,
                 f"Customer with id '{customer_id}' not found")
             
-            if not updated_card:
+            stmt = (select(LoyaltyCardDAO)
+                    .filter(LoyaltyCardDAO.card_id == card_id)
+                    .options(selectinload(LoyaltyCardDAO.customer)))
+            
+            result = await session.execute(stmt)
+            db_card = result.scalar_one_or_none()
+
+            if not db_card:
                 return find_or_throw_not_found(
                 [],
                 lambda _: True,
-                f"Loyalty card with id '{updated_card.card_id}' not found")
+                f"Loyalty card with id '{card_id}' not found")
             
-            if updated_card.customer:
-                if updated_card.customer[0].id==db_customer.id:
+            if db_card.customer:
+                if db_card.customer[0].id==db_customer.id:
                     throw_conflict_if_found(
-                    updated_card.customer,
+                    db_card.customer,
                     lambda _: True,
-                    f"Loyalty card with id '{updated_card.card_id}' is already attached to this customer"
+                    f"Loyalty card with id '{card_id}' is already attached to this customer"
                     )
                 else:
                     throw_conflict_if_found(
-                    updated_card.customer,
+                    db_card.customer,
                     lambda _: True,
-                    f"Loyalty card with id '{updated_card.card_id}' is already attached to a customer"
+                    f"Loyalty card with id '{card_id}' is already attached to a customer"
                     )
             
-            db_customer.card = updated_card
+            db_customer.card = db_card
 
             await session.commit()
             await session.refresh(db_customer)

@@ -29,9 +29,10 @@ class CustomerController:
         card_before = customerdao_to_dto(await self.repo.get_customer(customer_id)).card
         if customer_dto.card:
             new_card = await self.card_repo.get_loyalty_card(customer_dto.card.card_id)
+            new_card_id = new_card.card_id
         else:
-            new_card = None
-        updated = await self.repo.update_customer(customer_id, customer_dto.name, new_card)
+            new_card_id = None
+        updated = await self.repo.update_customer(customer_id, customer_dto.name, new_card_id)
         if card_before is not None and updated.card is None:
             await self.card_repo.delete_loyalty_card(card_before.card_id)
 
@@ -41,7 +42,7 @@ class CustomerController:
         """Attach a loyalty card to a customer - throws NotFoundError if Customer doesn't exist or Loyalty card doesn't exist
            and ConflictError if card already attached to some or same customer"""
         card = await self.card_repo.get_loyalty_card(int(card_id.lstrip('0')))
-        attached = await self.repo.update_customer_card(customer_id, card)
+        attached = await self.repo.update_customer_card(customer_id, card.card_id)
         return customerdao_to_dto(attached) if attached else None
 
     async def delete_customer(self, Customer_id: int) -> bool:
