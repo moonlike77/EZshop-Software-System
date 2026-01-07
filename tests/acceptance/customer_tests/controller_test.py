@@ -262,7 +262,7 @@ async def test_attach_loyalty_card_to_customer():
         cust.card = card
         mock_cust_repo.update_customer_card.return_value = cust
 
-        result = await controller.attach_loyality_card_to_customer(1, "0000000001")
+        result = await controller.attach_loyalty_card_to_customer(1, "0000000001")
         mock_card_repo.get_loyalty_card.assert_called_once_with(1)
         mock_cust_repo.update_customer_card.assert_called_once_with(1, 1)
 
@@ -292,7 +292,7 @@ async def test_attach_loyalty_card_to_customer_customer_not_found():
         cust.card = card
         mock_cust_repo.update_customer_card.return_value = None
 
-        result = await controller.attach_loyality_card_to_customer(1, "0000000001")
+        result = await controller.attach_loyalty_card_to_customer(1, "0000000001")
         mock_card_repo.get_loyalty_card.assert_called_once_with(1)
         mock_cust_repo.update_customer_card.assert_called_once_with(1, 1)
 
