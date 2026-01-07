@@ -28,13 +28,13 @@ class CustomerController:
         """Update Customer - throws NotFoundError if Customer doesn't exist, ConflictError if new name exists"""
         card_before = customerdao_to_dto(await self.repo.get_customer(customer_id)).card
         if customer_dto.card:
-            new_card = await self.card_repo.get_loyalty_card(customer_dto.card.card_id)
+            new_card = await self.card_repo.get_loyalty_card(int(customer_dto.card.card_id.lstrip('0')))
             new_card_id = new_card.card_id
         else:
             new_card_id = None
         updated = await self.repo.update_customer(customer_id, customer_dto.name, new_card_id)
-        if card_before is not None and updated.card is None:
-            await self.card_repo.delete_loyalty_card(card_before.card_id)
+        if card_before is not None and updated is not None and updated.card is None:
+            await self.card_repo.delete_loyalty_card(int(card_before.card_id.lstrip('0')))
 
         return customerdao_to_dto(updated) if updated else None
     
