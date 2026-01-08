@@ -35,7 +35,8 @@ app.add_middleware(
 app.include_router(auth_route.router)
 app.include_router(user_route.router)
 app.include_router(accounting_routes.router)
-app.include_router(customer_route.router)app.include_router(product_route.router)
+app.include_router(customer_route.router)
+app.include_router(product_route.router)
 app.include_router(order_route.router)
 
 app.add_exception_handler(AppError, error_handler)
