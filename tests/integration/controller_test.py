@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
 from app.controllers.customer_controller import CustomerController
+from app.controllers.loyalty_card_controller import LoyaltyCardController
 from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 
@@ -29,6 +30,26 @@ async def test_create_customer():
         assert result.name == "Mario Rossi"
 
 @pytest.mark.asyncio
+async def test_create_loyalty_card():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.create_loyalty_card = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        card = MagicMock()
+        card.card_id = 1
+        card.points = 0
+
+        mock_repo_inst.create_loyalty_card.return_value = card
+        result = await controller.create_loyalty_card()
+        mock_repo_inst.create_loyalty_card.assert_called_once()
+
+        assert isinstance(result, LoyaltyCardDTO)
+        assert result.card_id == "0000000001"
+
+@pytest.mark.asyncio
 async def test_get_customer():
     mock_repo_inst = MagicMock()
     mock_repo_inst.get_customer = AsyncMock()
@@ -48,6 +69,40 @@ async def test_get_customer():
         mock_repo_inst.get_customer.assert_called_once_with(1)
 
         assert result.name == "Mario Rossi"
+
+@pytest.mark.asyncio
+async def test_get_loyalty_card():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.get_loyalty_card = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        card = MagicMock()
+        card.card_id = 1
+        card.points = 0
+
+        mock_repo_inst.get_loyalty_card.return_value = card
+        result = await controller.get_loyalty_card(1)
+        mock_repo_inst.get_loyalty_card.assert_called_once_with(1)
+
+        assert result.card_id == "0000000001"
+
+@pytest.mark.asyncio
+async def test_get_loyalty_card_not_found():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.get_loyalty_card = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        mock_repo_inst.get_loyalty_card.return_value = None
+        result = await controller.get_loyalty_card(1)
+        mock_repo_inst.get_loyalty_card.assert_called_once_with(1)
+
+        assert result is None
 
 @pytest.mark.asyncio
 async def test_get_customer_not_found():
@@ -111,6 +166,40 @@ async def test_list_customers_empty():
         mock_repo_inst.list_customers.assert_called_once()
 
         assert len(result) == 0
+
+@pytest.mark.asyncio
+async def test_update_loyalty_card_points():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.update_loyalty_card_points = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        card = MagicMock()
+        card.card_id = 1
+        card.points = 30
+
+        mock_repo_inst.update_loyalty_card_points.return_value = card
+        result = await controller.update_loyalty_card_points(1, 30)
+        mock_repo_inst.update_loyalty_card_points.assert_called_once_with(1, 30)
+
+        assert result.points == 30
+
+@pytest.mark.asyncio
+async def test_update_loyalty_card_points_not_found():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.update_loyalty_card_points = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        mock_repo_inst.update_loyalty_card_points.return_value = None
+        result = await controller.update_loyalty_card_points(1, 30)
+        mock_repo_inst.update_loyalty_card_points.assert_called_once_with(1, 30)
+
+        assert result is None
 
 @pytest.mark.asyncio
 async def test_update_customer_name_and_card():
@@ -310,8 +399,56 @@ async def test_delete_customer():
         
         controller = CustomerController()
 
-    mock_cust_repo.delete_customer.return_value = True
-    result = await controller.delete_customer(1)
-    mock_cust_repo.delete_customer.assert_called_once_with(1)
+        mock_cust_repo.delete_customer.return_value = True
+        result = await controller.delete_customer(1)
+        mock_cust_repo.delete_customer.assert_called_once_with(1)
 
-    assert result == True
+        assert result == True
+
+@pytest.mark.asyncio
+async def test_delete_customer_not_found():
+    mock_cust_repo = MagicMock()
+    mock_card_repo = MagicMock()
+
+    mock_cust_repo.delete_customer = AsyncMock()
+
+    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
+         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+        
+        controller = CustomerController()
+
+        mock_cust_repo.delete_customer.return_value = None
+        result = await controller.delete_customer(1)
+        mock_cust_repo.delete_customer.assert_called_once_with(1)
+
+        assert result is None
+
+@pytest.mark.asyncio
+async def test_delete_loyalty_card():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.delete_loyalty_card = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        mock_repo_inst.delete_loyalty_card.return_value = True
+        result = await controller.delete_loyalty_card(1)
+        mock_repo_inst.delete_loyalty_card.assert_called_once_with(1)
+
+        assert result == True
+
+@pytest.mark.asyncio
+async def test_delete_loyalty_card_not_found():
+    mock_repo_inst = MagicMock()
+    mock_repo_inst.delete_loyalty_card = AsyncMock()
+
+    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+        
+        controller = LoyaltyCardController()
+
+        mock_repo_inst.delete_loyalty_card.return_value = None
+        result = await controller.delete_loyalty_card(1)
+        mock_repo_inst.delete_loyalty_card.assert_called_once_with(1)
+
+        assert result is None

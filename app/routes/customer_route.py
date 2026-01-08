@@ -3,7 +3,7 @@ from typing import List
 from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 from app.controllers.customer_controller import CustomerController
-from app.controllers.loyality_card_controller import LoyaltyCardController
+from app.controllers.loyalty_card_controller import LoyaltyCardController
 from app.middleware.auth_middleware import authenticate_user
 from app.config.config import ROUTES
 from fastapi import Response
