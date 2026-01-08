@@ -1,0 +1,785 @@
+============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0
+rootdir: D:\ezshop
+configfile: pytest.ini
+plugins: anyio-4.12.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 39 items
+
+tests\acceptance\api\accounting_test.py ..                               [  5%]
+tests\acceptance\api\user_test.py .....................                  [ 58%]
+tests\acceptance\e2e\accounting_route_test.py EEE.EEE.EE.                [ 87%]
+tests\integration\accounting_controller_test.py ....                     [ 97%]
+tests\unit\repositories\accounting_repository_test.py .                  [100%]
+
+=================================== ERRORS ====================================
+_____________ ERROR at setup of test_get_balance_success_as_admin _____________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+____________ ERROR at setup of test_get_balance_success_as_manager ____________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+___________ ERROR at setup of test_get_balance_forbidden_as_cashier ___________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+_________________ ERROR at setup of test_set_balance_success __________________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+_____________ ERROR at setup of test_set_balance_negative_amount ______________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+___________ ERROR at setup of test_set_balance_forbidden_as_cashier ___________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+________________ ERROR at setup of test_reset_balance_success _________________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+__________ ERROR at setup of test_reset_balance_forbidden_as_cashier __________
+
+    async def init_db():
+        await init_database()
+    
+        repo = UserRepository()
+    
+        # Check if admin already exists
+        try:
+>           res = await repo.get_user_by_username("admin")
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+init_db.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+app\repositories\user_repository.py:57: in get_user_by_username
+    return find_or_throw_not_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = []
+predicate = <function UserRepository.get_user_by_username.<locals>.<lambda> at 0x00000155ED2EB740>
+error_message = "User with username 'admin' not found"
+
+    def find_or_throw_not_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> T:
+        """
+        Find an item or throw NotFoundError if not found
+        Equivalent to TypeScript's findOrThrowNotFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if not found
+    
+        Returns:
+            The found item
+    
+        Raises:
+            NotFoundError: If item is not found
+        """
+        if not items:
+>           raise NotFoundError(error_message)
+E           app.models.errors.notfound_error.NotFoundError: User with username 'admin' not found
+
+app\utils.py:29: NotFoundError
+
+During handling of the above exception, another exception occurred:
+
+client = <starlette.testclient.TestClient object at 0x00000155ED253750>
+setup_test_db = None
+
+    @pytest_asyncio.fixture(scope="session")
+    async def auth_tokens(client, setup_test_db):
+        """authenticate users once and return their JWT tokens."""
+        import init_db as db_init_module
+>       await db_init_module.init_db()
+
+tests\acceptance\e2e\accounting_route_test.py:37: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+init_db.py:25: in init_db
+    await repo.create_user(manager_dto.username, manager_dto.password, manager_dto.type)
+app\repositories\user_repository.py:26: in create_user
+    throw_conflict_if_found(
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+items = [<app.models.DAO.user_dao.UserDAO object at 0x00000155ED3200C0>]
+predicate = <function UserRepository.create_user.<locals>.<lambda> at 0x00000155ED2EBCE0>
+error_message = "User with username 'ShopManager' already exists"
+
+    def throw_conflict_if_found(
+        items: Optional[List[T]],
+        predicate: Callable[[T], bool],
+        error_message: str
+    ) -> None:
+        """
+        Throw ConflictError if an item is found
+        Equivalent to TypeScript's throwConflictIfFound
+    
+        Args:
+            items: List of items to search (can be None or empty)
+            predicate: Function to test each item
+            error_message: Error message to throw if found
+    
+        Raises:
+            ConflictError: If item is found
+        """
+        if items:
+            for item in items:
+                if predicate(item):
+>                   raise ConflictError(error_message)
+E                   app.models.errors.conflict_error.ConflictError: User with username 'ShopManager' already exists
+
+app\utils.py:58: ConflictError
+=========================== short test summary info ===========================
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_get_balance_success_as_admin
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_get_balance_success_as_manager
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_get_balance_forbidden_as_cashier
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_set_balance_success
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_set_balance_negative_amount
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_set_balance_forbidden_as_cashier
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_reset_balance_success
+ERROR tests/acceptance/e2e/accounting_route_test.py::test_reset_balance_forbidden_as_cashier
+======================== 31 passed, 8 errors in 1.15s =========================
