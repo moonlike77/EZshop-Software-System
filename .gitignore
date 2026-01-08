@@ -9,3 +9,4 @@ app/data/database.sqlite
 .coverage
 .venv
 reports/
+.myfile.md
