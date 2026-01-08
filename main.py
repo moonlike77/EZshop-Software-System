@@ -9,6 +9,8 @@ from app.routes import  user_route, auth_route
 from contextlib import asynccontextmanager
 from app.database.database import engine, Base
 from logging import getLogger
+from app.routes.return_route import return_bp
+from app.routes import user_route, auth_route, return_route  # <--- return_route
 
 logger = getLogger(__name__)
 
@@ -46,3 +48,9 @@ def read_root():
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# جایی که router ها رجیستر میشن:
+app.include_router(auth_route.router)
+app.include_router(user_route.router)
+
+app.include_router(return_bp)
