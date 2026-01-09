@@ -100,5 +100,3 @@ def productdao_to_responsedto(product_dao: ProductDAO) -> ProductResponseDTO:
         quantity=product_dao.quantity,
         position=product_dao.position
     )
-
-    )
