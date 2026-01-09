@@ -12,6 +12,8 @@ from app.models.errors.invalid_state_error import InvalidStateError
 from app.models.errors.bad_request import BadRequestError
 from app.models.DAO.system_dao import SystemInfoDAO
 from app.models.DAO.product_dao import ProductDAO 
+from sqlalchemy.orm import selectinload
+from datetime import datetime, timezone
 
 
 class SaleRepository:
@@ -36,33 +38,32 @@ class SaleRepository:
 
 
     async def list_sales(self) -> list[SaleDAO]:
-        """Return all sales."""
+        """Return all sales (with lines loaded)."""
         async with await self._get_session() as session:
-            result = await session.execute(select(SaleDAO))
+            result = await session.execute(
+                select(SaleDAO).options(selectinload(SaleDAO.lines))
+            )
             return result.scalars().all()
 
 
     async def get_sale(self, sale_id: int) -> SaleDAO:
-        """Get a sale by id."""
+        """Get a sale by id (with lines loaded)."""
         async with await self._get_session() as session:
-            sale = await session.get(SaleDAO, sale_id)
+            result = await session.execute(
+                select(SaleDAO)
+                .options(selectinload(SaleDAO.lines))
+                .where(SaleDAO.id == sale_id)
+            )
+            sale = result.scalars().first()
+
             sale = find_or_throw_not_found(
                 [sale] if sale else [],
                 lambda _: True,
                 f"Sale with id '{sale_id}' not found"
             )
 
-            # If the sale is NOT OPEN and has no lines, we consider it "cancelled"
-            if sale.status != SaleStatus.OPEN:
-                result = await session.execute(
-                    select(func.count())
-                    .select_from(SaleLineDAO)
-                    .where(SaleLineDAO.sale_id == sale_id)
-                )
-                lines_count = result.scalar_one()
-
-                if lines_count == 0:
-                    raise NotFoundError(f"Sale with id '{sale_id}' not found")
+            if sale.status != SaleStatus.OPEN and len(sale.lines) == 0:
+                raise NotFoundError(f"Sale with id '{sale_id}' not found")
 
             return sale
         
@@ -256,7 +257,7 @@ class SaleRepository:
 
 
     async def close_sale(self, sale_id: int) -> bool:
-        """Close an OPEN sale, setting its status to PENDING."""
+        """Close an OPEN sale. If it has no lines, delete it."""
         async with await self._get_session() as session:
             sale = await session.get(SaleDAO, sale_id)
             sale = find_or_throw_not_found(
@@ -267,6 +268,18 @@ class SaleRepository:
 
             if sale.status != SaleStatus.OPEN:
                 raise InvalidStateError("Cannot modify a closed sale")
+
+            result = await session.execute(
+                select(func.count())
+                .select_from(SaleLineDAO)
+                .where(SaleLineDAO.sale_id == sale.id)
+            )
+            lines_count = result.scalar_one()
+
+            if lines_count == 0:
+                await session.delete(sale)
+                await session.commit()
+                return True
 
             sale.status = SaleStatus.PENDING
             await session.commit()

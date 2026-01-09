@@ -522,8 +522,7 @@ def test_close_sale_unauthenticated():
 
 
 def test_close_sale_already_closed(auth_tokens):
-    create_resp = client.post(SALES_URL + "/", headers=auth_header(auth_tokens, "admin"))
-    sale_id = create_resp.json()["id"]
+    sale_id = create_open_sale_with_item(auth_tokens, amount=1)
 
     first_close = client.patch(
         f"{SALES_URL}/{sale_id}/close",
@@ -536,6 +535,7 @@ def test_close_sale_already_closed(auth_tokens):
         headers=auth_header(auth_tokens, "admin"),
     )
     assert second_close.status_code == 420
+
 
 def test_close_empty_sale_deletes_sale(auth_tokens):
     resp = client.post(SALES_URL + "/", headers=auth_header(auth_tokens, "admin"))

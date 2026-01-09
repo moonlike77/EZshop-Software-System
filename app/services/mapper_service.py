@@ -14,6 +14,7 @@ from app.models.DAO.customer_dao import CustomerDAO
 from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
+from sqlalchemy import inspect
 
 
 def create_error_dto(code: int, message: str, name: str) -> ErrorDTO:
@@ -49,14 +50,21 @@ def salelinedao_to_dto(line_dao: SaleLineDAO) -> SaleLineDTO:  # added sale_line
     )
 
 
-def saledao_to_dto(sale_dao: SaleDAO) -> SaleDTO:  # added sale
+def saledao_to_dto(sale_dao: SaleDAO) -> SaleDTO:
+    state = inspect(sale_dao)
+
+    if "lines" in state.unloaded:
+        lines_dao = []
+    else:
+        lines_dao = sale_dao.lines or []
+
     return SaleDTO(
         id=sale_dao.id,
         status=sale_dao.status,
         discount_rate=sale_dao.discount_rate,
         created_at=sale_dao.created_at,
         closed_at=sale_dao.closed_at,
-        lines=[],
+        lines=[salelinedao_to_dto(line) for line in lines_dao],
     )
 
 def customerdao_to_dto(customer_dao: CustomerDAO) -> CustomerDTO:
