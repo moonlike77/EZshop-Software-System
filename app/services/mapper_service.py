@@ -14,7 +14,6 @@ from app.models.DAO.customer_dao import CustomerDAO
 from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
->>>>>>> app/services/mapper_service.py
 
 
 def create_error_dto(code: int, message: str, name: str) -> ErrorDTO:
