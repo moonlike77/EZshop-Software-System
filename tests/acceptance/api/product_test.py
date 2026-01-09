@@ -353,7 +353,7 @@ def test_update_quantity_increase(client, auth_tokens):
     product_id = create_resp.json()["id"]
     
     # Increase quantity
-    resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity_change=50", headers=auth_header(auth_tokens, "admin"))
+    resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity=50", headers=auth_header(auth_tokens, "admin"))
     assert resp.status_code == 200
     data = resp.json()
     assert data["quantity"] == 150
@@ -370,14 +370,14 @@ def test_update_quantity_decrease(client, auth_tokens):
     product_id = create_resp.json()["id"]
     
     # Decrease quantity
-    resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity_change=-30", headers=auth_header(auth_tokens, "admin"))
+    resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity=-30", headers=auth_header(auth_tokens, "admin"))
     assert resp.status_code == 200
     data = resp.json()
     assert data["quantity"] == 70
 
 
 def test_update_quantity_not_found(client, auth_tokens):
-    resp = client.patch(f"{BASE_URL}/products/99999/quantity?quantity_change=10", headers=auth_header(auth_tokens, "admin"))
+    resp = client.patch(f"{BASE_URL}/products/99999/quantity?quantity=10", headers=auth_header(auth_tokens, "admin"))
     assert resp.status_code == 404
 
 
@@ -397,17 +397,17 @@ def test_update_quantity_negative_result(client, auth_tokens):
     product_id = create_resp.json()["id"]
     
     # Try to decrease by 20 (would make it -10)
-    resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity_change=-20", headers=auth_header(auth_tokens, "admin"))
+    resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity=-20", headers=auth_header(auth_tokens, "admin"))
     assert resp.status_code == 400
 
 
 def test_update_quantity_forbidden_as_cashier(client, auth_tokens):
-    resp = client.patch(f"{BASE_URL}/products/1/quantity?quantity_change=10", headers=auth_header(auth_tokens, "cashier"))
+    resp = client.patch(f"{BASE_URL}/products/1/quantity?quantity=10", headers=auth_header(auth_tokens, "cashier"))
     assert resp.status_code == 403
 
 
 def test_update_quantity_unauthenticated(client):
-    resp = client.patch(f"{BASE_URL}/products/1/quantity?quantity_change=10")
+    resp = client.patch(f"{BASE_URL}/products/1/quantity?quantity=10")
     assert resp.status_code == 401
 
 

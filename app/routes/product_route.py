@@ -160,13 +160,13 @@ async def update_product_position(product_id: int, position: str):
 @router.patch("/{product_id}/quantity",
     response_model=ProductResponseDTO,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.ShopManager]))])
-async def update_product_quantity(product_id: int, quantity_change: int):
+async def update_product_quantity(product_id: int, quantity: int):
     """
     Update product type quantity.
 
     - Permissions: Administrator, ShopManager
     - Path parameter: product_id (int)
-    - Query parameter: quantity_change (int, positive or negative)
+    - Query parameter: quantity (int, positive or negative)
     - Returns: Updated ProductResponseDTO
     - Raises:
       - NotFoundError: when product not found
@@ -174,7 +174,7 @@ async def update_product_quantity(product_id: int, quantity_change: int):
     - Status code: 200 OK
     """
     try:
-        return await controller.update_quantity(product_id, quantity_change)
+        return await controller.update_quantity(product_id, quantity)
     except NotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with id {product_id} not found")
     except BadRequestError as e:
