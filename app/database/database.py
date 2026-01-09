@@ -3,7 +3,6 @@ from sqlalchemy.orm import declarative_base
 from app.config.config import DATABASE_URL
 import importlib
 import pkgutil
-import app.models.DAO as dao_package
 
 # --- Create the async engine ---
 engine = create_async_engine(
@@ -22,6 +21,7 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 # --- Declare the Base for ORM models ---
+# Base باید قبل از ایمپورت کردن DAO ها تعریف شود
 Base = declarative_base()
 
 # --- Dependency function for FastAPI routes ---
@@ -32,6 +32,9 @@ async def get_db():
 
 def _import_all_daos():
     """Importa dinamicamente tutti i moduli DAO."""
+    # نکته مهم: ایمپورت را اینجا انجام میدهیم تا از Circular Import جلوگیری شود
+    import app.models.DAO as dao_package
+    
     package_path = dao_package.__path__
     package_name = dao_package.__name__
     for _, module_name, _ in pkgutil.iter_modules(package_path):
@@ -39,13 +42,11 @@ def _import_all_daos():
 
 async def init_db():
     _import_all_daos()
-    #from app.models.DAO import DAO  # ensure all models imported
+    # مطمئن میشویم همه مدل‌ها ایمپورت شده‌اند تا جداول ساخته شوند
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 async def reset_db():
-    """Drop all tables and recreate them (resets database to empty state)."""
-    from app.models import DAO  # ensure all models imported
     async with engine.begin() as conn:
-        # Drop all tables
         await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
