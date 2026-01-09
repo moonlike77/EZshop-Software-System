@@ -34,13 +34,6 @@ async def create_product(product: ProductCreateDTO):
       - ConflictError: when barcode already exists
     - Status code: 201 Created
     """
-    if not product.description or product.description.strip() == '':
-        raise BadRequestError('Description is mandatory')
-    if not product.barcode or product.barcode.strip() == '':
-        raise BadRequestError('Barcode is mandatory')
-    if product.price_per_unit is None or product.price_per_unit <= 0:
-        raise BadRequestError('Price per unit must be greater than 0')
-
     try:
         return await controller.create_product(product)
     except Exception as e:
@@ -73,9 +66,6 @@ async def search_products(query: str):
     - Returns: List of matching ProductResponseDTO
     - Status code: 200 OK
     """
-    if not query or query.strip() == '':
-        raise BadRequestError('Search query cannot be empty')
-
     return await controller.search_products_by_description(query)
 
 

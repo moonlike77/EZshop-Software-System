@@ -34,12 +34,6 @@ async def issue_order(order: OrderCreateDTO):
       - NotFoundError: when product with barcode not found
     - Status code: 201 Created
     """
-    if not order.product_barcode or order.product_barcode.strip() == '':
-        raise BadRequestError('Product barcode is mandatory')
-    if order.quantity is None or order.quantity <= 0:
-        raise BadRequestError('Quantity must be greater than 0')
-    if order.price_per_unit is None or order.price_per_unit <= 0:
-        raise BadRequestError('Price per unit must be greater than 0')
 
     try:
         return await controller.create_order(order)
@@ -97,13 +91,6 @@ async def pay_for_order(order: OrderPayForDTO):
       - NotFoundError: when product with barcode not found
     - Status code: 201 Created
     """
-    if not order.product_barcode or order.product_barcode.strip() == '':
-        raise BadRequestError('Product barcode is mandatory')
-    if order.quantity is None or order.quantity <= 0:
-        raise BadRequestError('Quantity must be greater than 0')
-    if order.price_per_unit is None or order.price_per_unit <= 0:
-        raise BadRequestError('Price per unit must be greater than 0')
-
     try:
         return await controller.create_and_pay_order(order)
     except NotFoundError as e:

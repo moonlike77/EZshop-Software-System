@@ -35,17 +35,6 @@ class OrderRepository:
             await session.flush()
         return system_info
 
-    async def _get_product_by_barcode(self, session: AsyncSession, barcode: str) -> ProductDAO:
-        """Get product by barcode or throw NotFoundError"""
-        result = await session.execute(
-            select(ProductDAO).where(ProductDAO.barcode == barcode)
-        )
-        product = result.scalars().first()
-        return find_or_throw_not_found(
-            [product] if product else [],
-            lambda _: True,
-            f"Product with barcode '{barcode}' not found"
-        )
 
     async def create_order(
         self,
