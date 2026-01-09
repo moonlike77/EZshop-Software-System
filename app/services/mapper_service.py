@@ -99,5 +99,6 @@ def productdao_to_responsedto(product_dao: ProductDAO) -> ProductResponseDTO:
         note=product_dao.note,
         quantity=product_dao.quantity,
         position=product_dao.position
->>>>>>> app/services/mapper_service.py
+    )
+
     )
