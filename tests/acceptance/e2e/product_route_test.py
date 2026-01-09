@@ -243,7 +243,7 @@ def test_update_quantity_e2e(client, auth_token, reset_db):
     
     # Increase quantity
     response = client.patch(
-        f"/api/v1/products/{product_id}/quantity?quantity_change=50",
+        f"/api/v1/products/{product_id}/quantity?quantity=50",
         headers={"Authorization": f"Bearer {auth_token}"}
     )
     
