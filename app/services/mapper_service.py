@@ -6,6 +6,10 @@ from app.models.DTO.order_dto import OrderResponseDTO
 from app.models.DTO.product_dto import ProductResponseDTO
 from app.models.DTO.token_dto import TokenDTO
 from app.models.DTO.error_dto import ErrorDTO
+from app.models.DAO.sale_dao import SaleDAO
+from app.models.DAO.sale_line_dao import SaleLineDAO
+from app.models.DTO.sale_dto import SaleDTO
+from app.models.DTO.sale_line_dto import SaleLineDTO
 from app.models.DAO.customer_dao import CustomerDAO
 from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
@@ -32,6 +36,27 @@ def userdao_to_responsedto(user_dao: UserDAO) -> UserDTO:
         id=user_dao.id,
         username=user_dao.username,
         type=user_dao.type
+    )
+
+def salelinedao_to_dto(line_dao: SaleLineDAO) -> SaleLineDTO:  # added sale_line
+    return SaleLineDTO(
+        id=line_dao.id,
+        sale_id=line_dao.sale_id,
+        product_barcode=line_dao.product_barcode,
+        quantity=line_dao.quantity,
+        price_per_unit=line_dao.price_per_unit,
+        discount_rate=line_dao.discount_rate,
+    )
+
+
+def saledao_to_dto(sale_dao: SaleDAO) -> SaleDTO:  # added sale
+    return SaleDTO(
+        id=sale_dao.id,
+        status=sale_dao.status,
+        discount_rate=sale_dao.discount_rate,
+        created_at=sale_dao.created_at,
+        closed_at=sale_dao.closed_at,
+        lines=[],
     )
 
 def customerdao_to_dto(customer_dao: CustomerDAO) -> CustomerDTO:
