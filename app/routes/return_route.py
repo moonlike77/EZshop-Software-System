@@ -1,6 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from app.controllers.return_controller import ReturnController
+from app.config.config import ROUTES
+from app.models.DTO.return_dto import ReturnDTO
+from app.middleware.auth_middleware import authenticate_user
+from app.models.user_type import UserType
 
 # تعریف مدل‌های ورودی برای چک کردن دیتای ارسالی
 class StartReturnRequest(BaseModel):
@@ -14,12 +18,16 @@ class CloseReturnRequest(BaseModel):
     commit: bool
 
 # اینجا return_bp تعریف می‌شود
-return_bp = APIRouter()
+return_bp = APIRouter(prefix=ROUTES['V1_RETURNS'], tags=["returns"])
 controller = ReturnController()
 
-@return_bp.post('/api/returnTransaction', status_code=201)
-def start_return_transaction(payload: StartReturnRequest):
-    return controller.start_return(payload.saleId)
+@return_bp.post('/',
+    response_model=ReturnDTO, 
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
+    )
+def start_return_transaction(sale_id: int):
+    return controller.start_return(sale_id)
 
 @return_bp.post('/api/returnTransaction/{return_id}/product')
 def add_product_to_return(return_id: int, payload: AddProductRequest):
