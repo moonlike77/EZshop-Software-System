@@ -1,0 +1,158 @@
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from app.models.DAO.customer_dao import CustomerDAO
+from app.models.DTO.customer_dto import CustomerDTO
+from app.utils import throw_conflict_if_found, find_or_throw_not_found
+from app.database.database import AsyncSessionLocal
+from typing import Optional
+from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
+
+
+class CustomerRepository:
+
+    def __init__(self, session: Optional[AsyncSession] = None):
+        self._session = session
+
+    async def _get_session(self) -> AsyncSession:
+        return self._session or AsyncSessionLocal()
+
+    async def create_customer(self, name: str) -> CustomerDAO:
+        """
+        Create customer or throw ConflictError if name exists
+        """
+        async with await self._get_session() as session:
+            result = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == name))
+            existing_customers = result.scalars().all()
+
+            throw_conflict_if_found(
+                existing_customers,
+                lambda _: True,
+                f"Customer with name '{name}' already exists"
+            )
+
+            customer = CustomerDAO(name=name)
+            session.add(customer)
+            await session.commit()
+            await session.refresh(customer)
+            return customer
+
+    async def get_customer(self, customer_id: int) -> CustomerDAO | None:
+        """
+        Get customer by id or throw NotFoundError if not found
+        """
+        async with await self._get_session() as session:
+            customer = await session.get(CustomerDAO, customer_id)
+            return find_or_throw_not_found(
+                [customer] if customer else [],
+                lambda _: True,
+                f"Customer with id '{customer_id}' not found"
+            )
+
+    async def list_customers(self) -> list[CustomerDAO]:
+        """Get all customers"""
+        async with await self._get_session() as session:
+            result = await session.execute(select(CustomerDAO))
+            return result.scalars().all()
+
+    async def update_customer(self, customer_id: int, updated_name: str, card_id: int | None) -> CustomerDAO | None:
+        """
+        Update customer information. Throw NotFoundError if not found or ConflictError if the new name exists
+        """
+        async with await self._get_session() as session:
+            db_customer = await session.get(CustomerDAO, customer_id)
+            if not db_customer:
+                return find_or_throw_not_found(
+                [],
+                lambda _: True,
+                f"Customer with id '{customer_id}' not found")
+            
+            stmt = (select(LoyaltyCardDAO)
+                    .filter(LoyaltyCardDAO.card_id == card_id)
+                    .options(selectinload(LoyaltyCardDAO.customer)))
+            
+            result = await session.execute(stmt)
+            db_card = result.scalar_one_or_none()
+            
+            if not db_card and updated_name == "":
+                db_customer.card = None
+                return db_customer
+
+            if (db_customer.name != updated_name):
+                result_conflict = await session.execute(select(CustomerDAO).filter(CustomerDAO.name == updated_name))
+                conflicting_name = result_conflict.scalars().all()
+                throw_conflict_if_found(
+                    conflicting_name,
+                    lambda _: True,
+                    f"Customer with name '{updated_name}' already exists"
+                )
+                db_customer.name = updated_name
+                
+            if db_card:
+                await self.update_customer_card(db_customer.id, card_id)
+
+            await session.commit()
+            await session.refresh(db_customer)
+            return db_customer
+        
+    async def update_customer_card(self, customer_id: int, card_id: int) -> CustomerDAO | None:
+        """
+        Update customer's loyality card. Throw NotFoundError if customer not found or ConflictError if card already attached to some or same customer
+        """
+        async with await self._get_session() as session:
+            db_customer = await session.get(CustomerDAO, customer_id)
+            if not db_customer:
+                return find_or_throw_not_found(
+                [],
+                lambda _: True,
+                f"Customer with id '{customer_id}' not found")
+            
+            stmt = (select(LoyaltyCardDAO)
+                    .filter(LoyaltyCardDAO.card_id == card_id)
+                    .options(selectinload(LoyaltyCardDAO.customer)))
+            
+            result = await session.execute(stmt)
+            db_card = result.scalar_one_or_none()
+
+            if not db_card:
+                return find_or_throw_not_found(
+                [],
+                lambda _: True,
+                f"Loyalty card with id '{card_id}' not found")
+            
+            if db_card.customer:
+                if db_card.customer[0].id==db_customer.id:
+                    throw_conflict_if_found(
+                    db_card.customer,
+                    lambda _: True,
+                    f"Loyalty card with id '{card_id}' is already attached to this customer"
+                    )
+                else:
+                    throw_conflict_if_found(
+                    db_card.customer,
+                    lambda _: True,
+                    f"Loyalty card with id '{card_id}' is already attached to a customer"
+                    )
+            
+            db_customer.card = db_card
+
+            await session.commit()
+            await session.refresh(db_customer)
+            return db_customer
+
+    async def delete_customer(self, customer_id: int) -> bool:
+        """
+        Delete customer by id. Will throw NotFoundError if customer doesn't exist
+        """
+        async with await self._get_session() as session:
+            customer = await session.get(CustomerDAO, customer_id)
+
+            find_or_throw_not_found(
+                [customer] if customer else [],
+                lambda _: True,
+                f"Customer with id '{customer_id}' not found"
+            )
+
+            await session.delete(customer)
+            await session.commit()
+            return True
