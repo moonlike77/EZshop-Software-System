@@ -35,7 +35,7 @@ app.add_middleware(
 # register routers
 app.include_router(auth_route.router)
 app.include_router(user_route.router)
-app.include_router(return_route.return_bp)
+app.include_router(return_route.router)
 app.include_router(sale_route.router)
 app.include_router(accounting_routes.router)
 app.include_router(customer_route.router)

@@ -3,7 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
 from datetime import datetime, timezone
-
+from app.models.DAO.product_dao import ProductDAO
+from app.models.DAO.sale_dao import SaleDAO
+from app.utils import find_or_throw_not_found
 from app.database.database import AsyncSessionLocal
 from app.models.DAO.return_dao import ReturnDAO, ReturnLineDAO
 from app.models.return_status import ReturnStatus
@@ -17,6 +19,16 @@ class ReturnRepository:
 
     async def create_return(self, sale_id: int) -> ReturnDAO:
         async with await self._get_session() as session:
+            sale_res = await session.execute(
+                select(SaleDAO).where(SaleDAO.id == sale_id)
+            )
+            sale = sale_res.scalars().first()
+
+            sale = find_or_throw_not_found(
+                [sale] if sale else [],
+                lambda _: True,
+                f"Sale with id '{sale_id}' not found"
+            )
             new_return = ReturnDAO(sale_id=sale_id, status=ReturnStatus.OPEN)
             session.add(new_return)
             await session.commit()
@@ -50,8 +62,19 @@ class ReturnRepository:
                 await session.refresh(r, ["lines"])
             return returns
 
-    async def add_line(self, return_id: int, barcode: str, quantity: int, price: float) -> bool:
+    async def add_line(self, return_id: int, barcode: str, quantity: int) -> bool:
         async with await self._get_session() as session:
+            prod_res = await session.execute(
+                select(ProductDAO).where(ProductDAO.barcode == barcode)
+            )
+            product = prod_res.scalars().first()
+
+            product = find_or_throw_not_found(
+                [product] if product else [],
+                lambda _: True,
+                f"Product with barcode '{barcode}' not found"
+            )
+
             query = select(ReturnLineDAO).where(
                 ReturnLineDAO.return_id == return_id,
                 ReturnLineDAO.product_barcode == barcode
@@ -66,7 +89,7 @@ class ReturnRepository:
                     return_id=return_id,
                     product_barcode=barcode,
                     quantity=quantity,
-                    price_per_unit=price
+                    price_per_unit=product.price_per_unit
                 )
                 session.add(new_line)
             

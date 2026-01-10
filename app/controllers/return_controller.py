@@ -90,9 +90,8 @@ class ReturnController:
         # مقدار بازگشتی نباید از مقدار فروخته شده بیشتر باشه (لاجیک پیچیده)
         
         # فعلا قیمت رو ثابت میگیریم (چون کد Sale رو نداریم):
-        dummy_price = 10.0 
         
-        return await self.repo.add_line(return_id, barcode, amount, dummy_price)
+        return await self.repo.add_line(return_id, barcode, amount)
 
     async def remove_item(self, return_id: int, barcode: str, amount: int) -> bool:
         return_dao = await self.repo.get_return(return_id)
