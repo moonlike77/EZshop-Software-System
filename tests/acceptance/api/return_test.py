@@ -3,6 +3,12 @@ from fastapi.testclient import TestClient
 from main import app
 from init_db import reset, init_db
 import asyncio
+from app.database.database import AsyncSessionLocal
+from app.models.DAO.sale_dao import SaleDAO
+from app.models.DAO.sale_line_dao import SaleLineDAO
+from app.models.DAO.product_dao import ProductDAO
+from app.models.sale_status import SaleStatus
+from datetime import datetime, timezone
 
 BASE_URL = "/api/v1"
 
@@ -40,7 +46,8 @@ def auth_header(tokens, role):
 
 # --- شروع تست‌های Return ---
 
-def test_full_return_lifecycle(client, auth_tokens):
+@pytest.mark.asyncio
+async def test_full_return_lifecycle(client, auth_tokens):
     """
     سناریوی کامل:
     1. ایجاد مرجوعی (Start Return)
@@ -51,16 +58,36 @@ def test_full_return_lifecycle(client, auth_tokens):
     
     # 1. Start Return
     # نکته: sale_id رو به عنوان Query Param میفرستیم چون توی Route اینطور تعریف کردیم
-    resp = client.post(f"{BASE_URL}/returns/?sale_id=500", headers=auth_header(auth_tokens, "cashier"))
+    async with AsyncSessionLocal() as session:
+        prod = ProductDAO(id=1, description="Coffe", barcode="000000000001", price_per_unit=5.5,
+                          note="Black coffe", quantity=10, position="9-7-B")
+        session.add(prod)
+        await session.commit()
+        await session.refresh(prod)
+
+        sale_line = SaleLineDAO(id=1, sale_id=1, product_barcode=prod.barcode,
+                                quantity=3, price_per_unit=prod.price_per_unit, discount_rate=0.0)
+        session.add(sale_line)
+        await session.commit()
+        await session.refresh(sale_line)
+
+        sale = SaleDAO(id=1, status=SaleStatus.PAID, discount_rate=0.0,
+                       created_at=datetime.now(timezone.utc), closed_at=datetime.now(timezone.utc),
+                       lines=[sale_line])
+        session.add(sale)
+        await session.commit()
+        await session.refresh(sale)
+
+    resp = client.post(f"{BASE_URL}/returns/?sale_id=1", headers=auth_header(auth_tokens, "cashier"))
     assert resp.status_code == 201
     return_data = resp.json()
     return_id = return_data["id"]
     assert return_data["status"] == "OPEN"
+    assert return_data["sale_id"] == sale.id
 
     # 2. Add Item
     # بارکد و مقدار هم کوئری پارامتر هستن
-    item_params = {"barcode": "123456", "amount": 2}
-    resp = client.post(f"{BASE_URL}/returns/{return_id}/items", params=item_params, headers=auth_header(auth_tokens, "cashier"))
+    resp = client.post(f"{BASE_URL}/returns/{return_id}/items?barcode=000000000001&amount=2", headers=auth_header(auth_tokens, "cashier"))
     assert resp.status_code == 201
     assert resp.json()["success"] is True
 
@@ -72,6 +99,7 @@ def test_full_return_lifecycle(client, auth_tokens):
     # 3. Close Return
     resp = client.patch(f"{BASE_URL}/returns/{return_id}/close", headers=auth_header(auth_tokens, "cashier"))
     assert resp.status_code == 200
+    assert resp.json()["success"] is True
     
     # چک کنیم وضعیت بسته شده
     resp = client.get(f"{BASE_URL}/returns/{return_id}", headers=auth_header(auth_tokens, "cashier"))
@@ -85,10 +113,11 @@ def test_full_return_lifecycle(client, auth_tokens):
     # چک نهایی که وضعیت REIMBURSED شده
     resp = client.get(f"{BASE_URL}/returns/{return_id}", headers=auth_header(auth_tokens, "manager"))
     assert resp.json()["status"] == "REIMBURSED"
+@pytest.mark.asyncio
+async def test_delete_return(client, auth_tokens):
 
-def test_delete_return(client, auth_tokens):
     # ایجاد یک مرجوعی الکی
-    resp = client.post(f"{BASE_URL}/returns/?sale_id=600", headers=auth_header(auth_tokens, "cashier"))
+    resp = client.post(f"{BASE_URL}/returns/?sale_id=1", headers=auth_header(auth_tokens, "cashier"))
     r_id = resp.json()["id"]
     
     # حذف

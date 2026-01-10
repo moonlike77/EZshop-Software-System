@@ -44,7 +44,7 @@ async def test_close_return_success(controller, mock_repo):
     
     # بررسی
     assert result is True
-    mock_repo.update_status.assert_called_once_with(1, ReturnStatus.CLOSED)
+    mock_repo.update_status.assert_called_once_with(1, ReturnStatus.CLOSED, None)
 
 @pytest.mark.asyncio
 async def test_close_return_fail_if_not_open(controller, mock_repo):
