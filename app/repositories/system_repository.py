@@ -34,3 +34,19 @@ class SystemRepository:
                 await session.refresh(system_info)
 
             return system_info
+
+    async def set_balance(self, amount: float) -> SystemInfoDAO:
+        """Set the system balance to a specific amount."""
+        async with await self._get_session() as session:
+            result = await session.execute(select(SystemInfoDAO))
+            system_info = result.scalars().first()
+
+            if not system_info:
+                system_info = SystemInfoDAO(balance=amount)
+                session.add(system_info)
+            else:
+                system_info.balance = amount
+
+            await session.commit()
+            await session.refresh(system_info)
+            return system_info
