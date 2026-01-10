@@ -91,7 +91,7 @@ class ReturnController:
         
         # فعلا قیمت رو ثابت میگیریم (چون کد Sale رو نداریم):
         
-        return await self.repo.add_line(return_id, barcode, amount)
+        return await self.repo.add_line(return_dao, barcode, amount)
 
     async def remove_item(self, return_id: int, barcode: str, amount: int) -> bool:
         return_dao = await self.repo.get_return(return_id)
@@ -101,7 +101,7 @@ class ReturnController:
         if return_dao.status != ReturnStatus.OPEN:
             raise AppError("Cannot remove items from a closed return", 420)
             
-        success = await self.repo.remove_line_quantity(return_id, barcode, amount)
+        success = await self.repo.remove_line_quantity(return_dao, barcode, amount)
         # طبق Swagger اگر موفق بود True برمیگردونه اما اگر آیتم نبود یا... باید هندل شه
         return success # در Route این رو دیکشنری میکنیم
 
@@ -122,7 +122,7 @@ class ReturnController:
         # for line in return_dao.lines:
         #     await self.product_repo.increase_quantity(line.product_barcode, line.quantity)
 
-        await self.repo.update_status(return_id, ReturnStatus.CLOSED)
+        await self.repo.update_status(return_id, ReturnStatus.CLOSED, None)
         return True
 
     async def reimburse_return(self, return_id: int) -> dict:
@@ -134,12 +134,12 @@ class ReturnController:
              raise AppError("Return must be closed before reimbursement", 420)
 
         # محاسبه مبلغ کل
-        total_refund = sum(line.quantity * line.price_per_unit for line in return_dao.lines)
+        total_refund = round(sum(line.quantity * line.price_per_unit for line in return_dao.lines))
 
         # آپدیت بالانس سیستم
         # await self.system_repo.update_balance(-total_refund)
         
-        await self.repo.update_status(return_id, ReturnStatus.REIMBURSED)
+        await self.repo.update_status(return_id, ReturnStatus.REIMBURSED, total_refund)
         return {"refund_amount": total_refund}
 
     async def delete_return(self, return_id: int):

@@ -5,11 +5,11 @@ from app.controllers.return_controller import ReturnController
 from app.models.DTO.return_dto import ReturnDTO
 from app.models.user_type import UserType
 from app.middleware.auth_middleware import authenticate_user
-from app.config.config import APP_V1_BASE_URL
+from app.config.config import ROUTES
 from app.models.DTO.error_dto import ErrorDTO # برای داکیومنت سازی اگر لازم شد
 
 # آدرس پایه: /api/v1/returns
-router = APIRouter(prefix=f"{APP_V1_BASE_URL}/returns", tags=["returns"])
+router = APIRouter(prefix=ROUTES["V1_RETURNS"], tags=["returns"])
 controller = ReturnController()
 
 # دسترسی‌های مجاز
