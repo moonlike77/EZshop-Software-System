@@ -1,17 +1,16 @@
 import os
-import pytest
-import pytest_asyncio
+os.environ["TESTING"] = "1"  # testing run
+print(">>> Setting test DB environment:")
+
+# Import application components AFTER setting env
 from app.database import database
+import pytest
+import asyncio
 
-# تنظیم محیط تست
-os.environ["TESTING"] = "1"
-
-# استفاده از دکوریتور مخصوص pytest-asyncio برای فیکسچرهای async
-@pytest_asyncio.fixture(scope="function")
+@pytest.fixture(scope="session")
 async def setup_test_db():
-    """
-    این فیکسچر قبل از هر تست دیتابیس رو میسازه و بعدش پاک میکنه.
-    """
+    # Initialize only the test DB in memory
     await database.init_db()
     yield
+    # Optional teardown
     await database.reset_db()
