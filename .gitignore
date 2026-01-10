@@ -7,4 +7,6 @@ app/data/database.sqlite
 .codelens
 */.vscode/
 .coverage
+.venv
 reports/
+.myfile.md
