@@ -9,7 +9,6 @@ from app.routes import  user_route, auth_route, customer_route, accounting_route
 from contextlib import asynccontextmanager
 from app.database.database import engine, Base
 from logging import getLogger
-from app.routes import user_route, auth_route, return_route  # <--- return_route
 
 logger = getLogger(__name__)
 
