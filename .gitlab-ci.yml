@@ -10,7 +10,7 @@ test-all:
     - pip install --upgrade pip
     - pip install -r requirements.txt
   script:
-    - pytest tests/ --cov --cov-report=term
+    - pytest tests/ --cov --cov-report=term -s -vv --tb=short
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
       when: always
