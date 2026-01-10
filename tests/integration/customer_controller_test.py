@@ -6,7 +6,7 @@ from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
 
 @pytest.mark.asyncio
-async def test_create_customer():
+async def test_create_customer_without_card():
     mock_repo_inst = MagicMock()
     mock_repo_inst.create_customer = AsyncMock()
 
@@ -28,6 +28,45 @@ async def test_create_customer():
 
         assert isinstance(result, CustomerDTO)
         assert result.name == "Mario Rossi"
+
+@pytest.mark.asyncio
+async def test_create_customer_with_card():
+    mock_repo_inst = MagicMock()
+    mock_card_repo_inst = MagicMock()
+    mock_repo_inst.create_customer = AsyncMock()
+    mock_card_repo_inst.get_loyalty_card = AsyncMock()
+    mock_repo_inst.update_customer_card = AsyncMock()
+
+    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
+         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo_inst):
+        
+        controller = CustomerController()
+
+        input_dto = CustomerDTO(name="Mario Rossi", card=LoyaltyCardDTO(card_id="0000000001", points=0))
+
+        card = MagicMock()
+        card.card_id = 1
+        card.points = 0
+
+        mock_card_repo_inst.get_loyalty_card.return_value = card
+
+        cust = MagicMock()
+        cust.id = 1
+        cust.name = "Mario Rossi"
+        cust.card = None
+
+        mock_repo_inst.create_customer.return_value = cust
+
+        cust.card = card
+
+        mock_repo_inst.update_customer_card.return_value = cust
+        result = await controller.create_customer(input_dto)
+        mock_repo_inst.create_customer.assert_called_once()
+        mock_repo_inst.update_customer_card.assert_called_once()
+
+        assert isinstance(result, CustomerDTO)
+        assert result.name == "Mario Rossi"
+        assert result.card.card_id == "0000000001"
 
 @pytest.mark.asyncio
 async def test_create_loyalty_card():

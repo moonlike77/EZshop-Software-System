@@ -3,6 +3,7 @@ from app.repositories.customer_repository import CustomerRepository
 from app.repositories.loyalty_card_repository import LoyaltyCardRepository
 from app.models.DTO.customer_dto import CustomerDTO
 from app.services.mapper_service import customerdao_to_dto
+from app.models.errors.bad_request import BadRequestError
 
 class CustomerController:
     def __init__(self):
@@ -12,6 +13,10 @@ class CustomerController:
     async def create_customer(self, Customer_dto: CustomerDTO) -> CustomerDTO: 
         """Create Customer - throws ConflictError if name exists"""
         created = await self.repo.create_customer(Customer_dto.name)
+        if Customer_dto.card:
+            card = await self.card_repo.get_loyalty_card(int(Customer_dto.card.card_id.lstrip('0')))
+            if card:
+                created = await self.repo.update_customer_card(created.id, card.card_id)
         return customerdao_to_dto(created)
 
     async def get_customer(self, Customer_id: int) -> Optional[CustomerDTO]:
