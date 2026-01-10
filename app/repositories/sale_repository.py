@@ -282,6 +282,7 @@ class SaleRepository:
                 return True
 
             sale.status = SaleStatus.PENDING
+            sale.closed_at = datetime.now(timezone.utc)
             await session.commit()
             return True
 
@@ -322,6 +323,8 @@ class SaleRepository:
             change = round(cash_amount - total, 2)
 
             sale.status = SaleStatus.PAID
+            if sale.closed_at is None:
+                sale.closed_at = datetime.now(timezone.utc)
 
             result_sys = await session.execute(select(SystemInfoDAO))
             system_info = result_sys.scalars().first()
