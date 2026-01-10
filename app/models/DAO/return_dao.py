@@ -1,38 +1,35 @@
-# app/models/DAO/return_dao.py
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Enum
+from sqlalchemy.orm import relationship
+from datetime import datetime
+from app.database.database import Base
+from app.models.return_status import ReturnStatus
 
-class ReturnLineDAO:
-    def __init__(self, product_code, amount, price_per_unit):
-        self.product_code = product_code
-        self.amount = amount
-        self.price_per_unit = price_per_unit
+class ReturnDAO(Base):
+    __tablename__ = "returns"
 
-    def to_dict(self):
-        return {
-            "product_code": self.product_code,
-            "amount": self.amount,
-            "price_per_unit": self.price_per_unit
-        }
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    
+    # تغییر موقت: حذف ForeignKey برای اینکه بدون جدول Sales کار کنه
+    sale_id = Column(Integer, nullable=False) 
+    # sale_id = Column(Integer, ForeignKey("sales.id"), nullable=False) # نسخه اصلی
+    
+    status = Column(Enum(ReturnStatus), default=ReturnStatus.OPEN, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    closed_at = Column(DateTime, nullable=True)
+    
+    # ارتباط با خطوط مرجوعی (این مشکلی نداره چون ReturnLineDAO همینجاست)
+    lines = relationship("ReturnLineDAO", back_populates="return_transaction", cascade="all, delete-orphan")
+    
+    # تغییر موقت: کامنت کردن ارتباط با SaleDAO
+    # sale = relationship("SaleDAO") 
 
-# تغییر مهم اینجاست: (Base) حذف شد
-class ReturnDAO:
-    def __init__(self, return_id, sale_id, date, status="OPEN"):
-        self.return_id = return_id
-        self.sale_id = sale_id
-        self.date = date
-        self.status = status
-        self.products = []
-        self.total_amount = 0.0
+class ReturnLineDAO(Base):
+    __tablename__ = "return_lines"
 
-    def add_product(self, product_code, amount, price_per_unit):
-        self.products.append(ReturnLineDAO(product_code, amount, price_per_unit))
-        self.total_amount += (amount * price_per_unit)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    return_id = Column(Integer, ForeignKey("returns.id"), nullable=False)
+    product_barcode = Column(String, nullable=False)
+    quantity = Column(Integer, nullable=False)
+    price_per_unit = Column(Float, nullable=False)
 
-    def to_dict(self):
-        return {
-            "return_id": self.return_id,
-            "sale_id": self.sale_id,
-            "date": self.date,
-            "status": self.status,
-            "products": [p.to_dict() for p in self.products],
-            "total_amount": self.total_amount
-        }
+    return_transaction = relationship("ReturnDAO", back_populates="lines")
