@@ -1,7 +1,7 @@
 import pytest
 
 from init_db import reset, init_db
-from sqlalchemy import select
+from sqlalchemy import select, delete
 
 from app.repositories.sale_repository import SaleRepository
 from app.repositories.product_repository import ProductRepository
@@ -473,3 +473,120 @@ async def test_sale_repo_pay_sale_invalid_cash_amount_raises():
 
     with pytest.raises(BadRequestError):
         await repo.pay_sale(sale_id=1, cash_amount=-10.0)
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_apply_discount_success_updates_sale():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    sale = await repo.create_sale()
+
+    ok = await repo.apply_discount(sale.id, 0.2)
+    assert ok is True
+
+    updated = await repo.get_sale(sale.id)
+    assert updated.discount_rate == 0.2
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_apply_product_discount_success_updates_line():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    barcode = "sale-disc-ok"
+    await _create_product(barcode, qty=10, price=10.0)
+
+    sale_id = await _create_sale_and_add_item(repo, barcode, 2)
+
+    ok = await repo.apply_product_discount(sale_id, barcode, 0.15)
+    assert ok is True
+
+    async with await repo._get_session() as session:
+        res = await session.execute(
+            select(SaleLineDAO).where(
+                SaleLineDAO.sale_id == sale_id,
+                SaleLineDAO.product_barcode == barcode
+            )
+        )
+        line = res.scalars().first()
+        assert line is not None
+        assert line.discount_rate == 0.15
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_close_empty_sale_deletes_sale():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    sale = await repo.create_sale()
+
+    ok = await repo.close_sale(sale.id)
+    assert ok is True
+
+    with pytest.raises(NotFoundError):
+        await repo.get_sale(sale.id)
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_pay_sale_sets_closed_at_if_missing():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    barcode = "sale-pay-closedat"
+    await _create_product(barcode, qty=10, price=5.0)
+    sale_id = await _create_sale_and_add_item(repo, barcode, 2)
+
+    await repo.close_sale(sale_id)
+
+    async with await repo._get_session() as session:
+        db_sale = await session.get(SaleDAO, sale_id)
+        db_sale.closed_at = None
+        await session.commit()
+
+    change = await repo.pay_sale(sale_id, 50.0)
+    assert change == 40.0
+
+    sale = await repo.get_sale(sale_id)
+    assert sale.status == SaleStatus.PAID
+    assert sale.closed_at is not None
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_pay_sale_creates_system_info_if_missing():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    async with await repo._get_session() as session:
+        await session.execute(delete(SystemInfoDAO))
+        await session.commit()
+
+    barcode = "sale-pay-syscreate"
+    await _create_product(barcode, qty=10, price=4.0)
+    sale_id = await _create_sale_and_add_item(repo, barcode, 2)
+    await repo.close_sale(sale_id)
+
+    change = await repo.pay_sale(sale_id, 20.0)
+    assert change == 12.0
+
+    async with await repo._get_session() as session:
+        res = await session.execute(select(SystemInfoDAO))
+        system_info = res.scalars().first()
+        assert system_info is not None
+        assert system_info.balance == 8.0
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_apply_product_discount_wrong_status_raises():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    barcode = "sale-disc-wrong-status"
+    await _create_product(barcode, qty=10, price=1.0)
+
+    sale_id = await _create_sale_and_add_item(repo, barcode, 1)
+
+    await repo.close_sale(sale_id)
+
+    with pytest.raises(InvalidStateError):
+        await repo.apply_product_discount(sale_id, barcode, 0.1)
