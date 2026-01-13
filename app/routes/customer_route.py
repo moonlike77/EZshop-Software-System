@@ -130,7 +130,7 @@ async def create_loyality_card():
 
 @router.patch("/{customer_id}/attach-card/{card_id}",
               response_model=CustomerDTO,
-              status_code=status.HTTP_200_OK,
+              status_code=status.HTTP_201_CREATED,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
               )
 async def attach_card(customer_id: int, card_id: str):
@@ -150,7 +150,7 @@ async def attach_card(customer_id: int, card_id: str):
         raise ConflictError("Card already attached")
     return attached
 
-@router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_200_OK,
+@router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_201_CREATED,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))])
 async def update_points(card_id: int, points: int = Query(...)):
     """
