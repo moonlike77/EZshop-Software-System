@@ -161,8 +161,10 @@ def test_delete_sale_success(auth_tokens):
     sale_id = create_resp.json()["id"]
 
     resp = client.delete(f"{SALES_URL}/{sale_id}", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 204
+
+    get_resp = client.get(f"{SALES_URL}/{sale_id}", headers=auth_header(auth_tokens, "admin"))
+    assert get_resp.status_code == 404
 
 
 def test_delete_sale_bad_id(auth_tokens):
@@ -282,8 +284,7 @@ def test_remove_item_from_sale_success(auth_tokens):
         headers=auth_header(auth_tokens, "admin"),
         params={"barcode": PRODUCT_BARCODE, "amount": 1},
     )
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 202
 
 
 def test_remove_item_not_in_sale(auth_tokens):
