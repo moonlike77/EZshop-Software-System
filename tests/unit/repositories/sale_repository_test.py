@@ -183,7 +183,7 @@ async def test_sale_repo_add_product_insufficient_stock_conflict():
     await _create_product(barcode, qty=1, price=1.0)
     sale = await repo.create_sale()
 
-    with pytest.raises(ConflictError):
+    with pytest.raises(BadRequestError):
         await repo.add_product_to_sale(sale.id, barcode, 2)
 
 
@@ -296,7 +296,7 @@ async def test_sale_repo_remove_product_success_partial_restores_stock_and_decre
 
 
 @pytest.mark.asyncio
-async def test_sale_repo_remove_product_success_delete_line_when_amount_ge_line_qty():
+async def test_sale_repo_remove_product_deletes_line_when_amount_eq_line_qty():
     await reset(); await init_db()
     repo = SaleRepository()
     prod_repo = ProductRepository()
@@ -305,7 +305,7 @@ async def test_sale_repo_remove_product_success_delete_line_when_amount_ge_line_
     prod = await _create_product(barcode, qty=10, price=1.0)
     sale_id = await _create_sale_and_add_item(repo, barcode, 3)
 
-    ok = await repo.remove_product_from_sale(sale_id, barcode, 10)
+    ok = await repo.remove_product_from_sale(sale_id, barcode, 3)
     assert ok is True
 
     updated_prod = await prod_repo.get_product_by_id(prod.id)
@@ -321,6 +321,19 @@ async def test_sale_repo_remove_product_success_delete_line_when_amount_ge_line_
         )
         line = res.scalars().first()
         assert line is None
+
+
+@pytest.mark.asyncio
+async def test_sale_repo_remove_product_fails_when_amount_gt_line_qty():
+    await reset(); await init_db()
+    repo = SaleRepository()
+
+    barcode = "sale-rem-too-much"
+    await _create_product(barcode, qty=10, price=1.0)
+    sale_id = await _create_sale_and_add_item(repo, barcode, 3)
+
+    with pytest.raises(BadRequestError):
+        await repo.remove_product_from_sale(sale_id, barcode, 10)
 
 
 @pytest.mark.asyncio
