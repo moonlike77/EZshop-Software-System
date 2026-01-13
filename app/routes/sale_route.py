@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends, Path, Query
+from fastapi import APIRouter, status, Depends, Path, Query, Response
 from app.config.config import ROUTES
 from app.controllers.sale_controller import SaleController
 from app.models.DTO.sale_dto import SaleDTO
@@ -41,15 +41,14 @@ async def get_sale(sale_id: int = Path(..., description="Sale ID")):
 
 
 @router.delete("/{sale_id}",
-    response_model=dict,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.ShopManager, UserType.Cashier]))])
 async def delete_sale(sale_id: int = Path(..., description="Sale ID")):
     """Delete a sale by its ID, unless it has been PAID. Returns {"success": true} on success. Permissions: Administrator, ShopManager, Cashier"""
     if sale_id <= 0:
         raise BadRequestError("Invalid sale ID")
     await controller.delete_sale(sale_id)
-    return {"success": True}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/{sale_id}/items",
@@ -70,8 +69,7 @@ async def add_product_to_sale(
 
 
 @router.delete("/{sale_id}/items",
-    response_model=dict,
-    status_code=status.HTTP_200_OK,
+    status_code=status.HTTP_202_ACCEPTED,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.ShopManager, UserType.Cashier]))])
 async def remove_product_from_sale(
     sale_id: int = Path(..., description="Sale ID"),
@@ -83,7 +81,7 @@ async def remove_product_from_sale(
     if amount <= 0:
         raise BadRequestError("Amount must be a positive integer")
     await controller.remove_product_from_sale(sale_id, barcode, amount)
-    return {"success": True}
+    return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
 @router.patch("/{sale_id}/discount",

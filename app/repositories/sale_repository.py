@@ -136,7 +136,7 @@ class SaleRepository:
             )
 
             if product.quantity < amount:
-                raise ConflictError("Insufficient stock")
+                raise BadRequestError("Insufficient stock")
 
             product.quantity -= amount
 
@@ -178,6 +178,9 @@ class SaleRepository:
 
             if not line:
                 raise NotFoundError("Product not found in sale")
+            
+            if amount > line.quantity:
+                raise BadRequestError("Cannot remove more items than present in sale")
 
             # restore stock
             prod_res = await session.execute(
