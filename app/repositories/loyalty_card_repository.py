@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
 from app.utils import find_or_throw_not_found
+from app.models.errors.internal_server_error import InternalServerError
 from app.database.database import AsyncSessionLocal
 from typing import Optional
 
@@ -52,6 +53,9 @@ class LoyaltyCardRepository:
                 [],
                 lambda _: True,
                 f"loyalty card with id '{loyalty_card_id}' not found")
+            
+            if db_loyalty_card.points < abs(updated_points) and updated_points < 0:
+                raise InternalServerError("Not enough points")
 
             db_loyalty_card.points = db_loyalty_card.points + updated_points
 

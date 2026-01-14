@@ -7,6 +7,7 @@ from app.models.DAO.customer_dao import CustomerDAO
 from app.models.DAO.loyalty_card_dao import LoyaltyCardDAO
 from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.conflict_error import ConflictError
+from app.models.errors.internal_server_error import InternalServerError
 from init_db import reset, init_db
 
 @pytest_asyncio.fixture(autouse=True)
@@ -88,6 +89,12 @@ async def test_update_loyalty_card_points_success(card_repository):
     card = await card_repository.update_loyalty_card_points(1, 50)
     points_after = card.points
     assert points_after-points_before == 50
+
+@pytest.mark.asyncio
+async def test_update_loyalty_card_points_not_enough_points(card_repository):
+    await card_repository.create_loyalty_card()
+    with pytest.raises(InternalServerError):
+        await card_repository.update_loyalty_card_points(1, -50)
 
 @pytest.mark.asyncio
 async def test_update_loyalty_card_points_not_found(card_repository):

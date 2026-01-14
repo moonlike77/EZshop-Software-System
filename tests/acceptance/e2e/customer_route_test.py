@@ -102,6 +102,21 @@ async def test_get_customer_success(client, auth_tokens):
         assert resp.status_code == 200
         assert resp.json()["name"] == "Mario Rossi"
         mock_controller.get_customer.assert_called_once_with(1)
+        
+@pytest.mark.asyncio
+async def test_get_customer_invalid_id(client, auth_tokens):
+
+    mock_controller = MagicMock()
+    mock_controller.get_customer = AsyncMock()
+
+    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
+    mock_controller.get_customer.return_value = cust
+
+    with patch('app.routes.customer_route.controller', mock_controller):
+
+        resp = client.get(BASE_URL + "/customers/-1", headers=auth_header(auth_tokens, "admin"))
+
+        assert resp.status_code == 400
 
 @pytest.mark.asyncio
 async def test_get_customer_not_found(client, auth_tokens):
@@ -135,6 +150,38 @@ async def test_update_customer_success(client, auth_tokens):
         assert resp.status_code == 201
         assert resp.json()["name"] == "Mario Rossi"
         mock_controller.update_customer.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_update_customer_invalid_id(client, auth_tokens):
+
+    mock_controller = MagicMock()
+    mock_controller.update_customer = AsyncMock()
+
+    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
+    mock_controller.update_customer.return_value = cust
+
+    with patch('app.routes.customer_route.controller', mock_controller):
+
+        payload = {"name": "Mario Rossi", "card": None}
+        resp = client.put(BASE_URL + "/customers/-1", json=payload, headers=auth_header(auth_tokens, "admin"))
+
+        assert resp.status_code == 400
+
+@pytest.mark.asyncio
+async def test_update_customer_invalid_payload(client, auth_tokens):
+
+    mock_controller = MagicMock()
+    mock_controller.update_customer = AsyncMock()
+
+    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
+    mock_controller.update_customer.return_value = cust
+
+    with patch('app.routes.customer_route.controller', mock_controller):
+
+        payload = {"name": "", "card": None}
+        resp = client.put(BASE_URL + "/customers/1", json=payload, headers=auth_header(auth_tokens, "admin"))
+
+        assert resp.status_code == 400
 
 @pytest.mark.asyncio
 async def test_update_customer_not_found(client, auth_tokens):
@@ -212,7 +259,7 @@ async def test_attach_loyalty_card_to_customer_success(client, auth_tokens):
 
         resp = client.patch(BASE_URL + "/customers/1/attach-card/0000000001", headers=auth_header(auth_tokens, "admin"))
 
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["card"]["card_id"] == "0000000001"
         mock_controller.attach_loyalty_card_to_customer.assert_called_once()
 
@@ -269,6 +316,6 @@ async def test_update_loyalty_card_points_success(client, auth_tokens):
 
         resp = client.patch(BASE_URL + "/customers/cards/1?points=30", headers=auth_header(auth_tokens, "admin"))
 
-        assert resp.status_code == 200
+        assert resp.status_code == 201
         assert resp.json()["points"] == 30
         mock_card_controller.update_loyalty_card_points.assert_called_once()
