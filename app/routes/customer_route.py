@@ -65,6 +65,8 @@ async def get_customer(customer_id: int):
       - NotFoundError: when the customer does not exist
     - Status code: 200 OK
     """
+    if customer_id < 1:
+        raise BadRequestError("Invalid id")
     customer = await controller.get_customer(customer_id)
     if not customer:
         raise NotFoundError("customer not found")
@@ -87,6 +89,10 @@ async def update_customer(customer_id: int, customer: CustomerDTO):
       - NotFoundError: when the customer to update does not exist
     - Status code: 201 Created
     """
+    if customer_id < 1:
+        raise BadRequestError("Invalid id")
+    if customer.name is None or customer.name == "":
+        raise BadRequestError("Invalid payload")
     updated = await controller.update_customer(customer_id, customer)
     if not updated:
         raise NotFoundError("customer not found")
