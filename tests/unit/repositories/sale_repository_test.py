@@ -17,6 +17,7 @@ from app.models.DAO.sale_dao import SaleDAO
 from app.models.DAO.sale_line_dao import SaleLineDAO
 from app.models.DAO.system_dao import SystemInfoDAO
 
+
 @pytest.mark.asyncio
 async def _create_product(barcode: str, qty: int = 100, price: float = 10.0):
     prod_repo = ProductRepository()
@@ -28,11 +29,13 @@ async def _create_product(barcode: str, qty: int = 100, price: float = 10.0):
         position="1-A-1"
     )
 
+
 @pytest.mark.asyncio
 async def _create_sale_and_add_item(repo: SaleRepository, barcode: str, amount: int):
     sale = await repo.create_sale()
     await repo.add_product_to_sale(sale.id, barcode, amount)
     return sale.id
+
 
 @pytest.mark.asyncio
 async def test_sale_repo_create_sale_success():
