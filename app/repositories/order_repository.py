@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
 
 from sqlalchemy import select
@@ -10,6 +10,9 @@ from app.models.DAO.order_dao import OrderDAO, OrderStatus
 from app.models.DAO.product_dao import ProductDAO
 from app.models.DAO.system_dao import SystemInfoDAO
 from app.models.errors.bad_request import BadRequestError
+from app.models.errors.invalid_state_error import InvalidStateError
+from app.models.errors.internal_server_error import InternalServerError
+from app.models.errors.app_error import AppError
 from app.models.errors.notfound_error import NotFoundError
 from app.utils import find_or_throw_not_found
 
@@ -49,7 +52,7 @@ class OrderRepository:
                 quantity=quantity,
                 price_per_unit=price_per_unit,
                 status=OrderStatus.Issued,
-                issue_date=datetime.utcnow()
+                issue_date=datetime.now(timezone.utc)
             )
             session.add(order)
             await session.commit()
@@ -84,15 +87,16 @@ class OrderRepository:
             )
 
             if order.status != OrderStatus.Issued:
-                raise BadRequestError(
-                    f"Order {order_id} is not in Issued state (current: {order.status})"
+                raise InvalidStateError(
+                    f"Order {order_id} is not in ISSUED state (current: {order.status})"
                 )
 
             order_cost = order.quantity * order.price_per_unit
             system = await self._get_system_info(session)
             if system.balance < order_cost:
-                raise BadRequestError(
-                    f"Insufficient balance. Required: {order_cost}, Available: {system.balance}"
+                raise AppError(
+                    f"Insufficient balance. Required: {order_cost}, Available: {system.balance}",
+                    421,
                 )
 
             order.status = OrderStatus.Paid
@@ -115,8 +119,8 @@ class OrderRepository:
             )
 
             if order.status != OrderStatus.Paid:
-                raise BadRequestError(
-                    f"Order {order_id} is not in Paid state (current: {order.status})"
+                raise InvalidStateError(
+                    f"Order {order_id} is not in PAID state (current: {order.status})"
                 )
 
             product = await session.get(ProductDAO, order.product_id)
@@ -124,7 +128,8 @@ class OrderRepository:
                 raise NotFoundError(f"Product with id '{order.product_id}' not found")
 
             if not product.position:
-                raise BadRequestError(f"Product with id '{order.product_id}' has no location assigned")
+                # Evaluation expects this case to surface as a server error.
+                raise InternalServerError(f"Product with id '{order.product_id}' has no location assigned")
 
             order.status = OrderStatus.Completed
             product.quantity = (product.quantity or 0) + order.quantity

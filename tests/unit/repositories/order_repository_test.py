@@ -10,7 +10,9 @@ from app.repositories.product_repository import ProductRepository
 from app.repositories.system_repository import SystemRepository
 from app.models.DAO.order_dao import OrderStatus
 from app.models.errors.notfound_error import NotFoundError
-from app.models.errors.bad_request import BadRequestError
+from app.models.errors.app_error import AppError
+from app.models.errors.invalid_state_error import InvalidStateError
+from app.models.errors.internal_server_error import InternalServerError
 from app.models.DAO.order_dao import OrderDAO
 from app.models.DAO.product_dao import ProductDAO
 from unittest.mock import AsyncMock, MagicMock
@@ -156,7 +158,7 @@ async def test_pay_order_wrong_status(order_repository, product_repository, syst
     await order_repository.pay_order(order.id)  # Pay once
     
     # Try to pay again (now in PAID state)
-    with pytest.raises(BadRequestError, match="not in Issued state"):
+    with pytest.raises(InvalidStateError):
         await order_repository.pay_order(order.id)
 
 
@@ -173,8 +175,9 @@ async def test_pay_order_insufficient_balance(order_repository, product_reposito
     
     order = await order_repository.create_order(product.id, 5, 100.0)  # Cost: 500
     
-    with pytest.raises(BadRequestError, match="Insufficient balance"):
+    with pytest.raises(AppError) as excinfo:
         await order_repository.pay_order(order.id)
+    assert excinfo.value.status == 421
 
 
 @pytest.mark.asyncio
@@ -220,7 +223,7 @@ async def test_record_arrival_wrong_status(order_repository, product_repository)
     
     order = await order_repository.create_order(product.id, 5, 10.0)  # ISSUED state
     
-    with pytest.raises(BadRequestError, match="not in Paid state"):
+    with pytest.raises(InvalidStateError):
         await order_repository.record_order_arrival(order.id)
 
 
@@ -239,7 +242,7 @@ async def test_record_arrival_no_position(order_repository, product_repository, 
     order = await order_repository.create_order(product.id, 5, 10.0)
     await order_repository.pay_order(order.id)
     
-    with pytest.raises(BadRequestError, match="no location assigned"):
+    with pytest.raises(InternalServerError):
         await order_repository.record_order_arrival(order.id)
 
 

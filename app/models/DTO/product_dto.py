@@ -4,7 +4,7 @@ from typing import Optional
 
 class ProductCreateDTO(BaseModel):
     description: str = Field(..., min_length=1)
-    barcode: str = Field(..., min_length=1)
+    barcode: str = Field(..., pattern=r"^(?:\d{12,14}|[A-Z0-9]{6})$")
     price_per_unit: float = Field(..., gt=0)
     note: Optional[str] = Field(None, min_length=1)
     quantity: Optional[int] = Field(0, ge=0)
@@ -13,7 +13,7 @@ class ProductCreateDTO(BaseModel):
 
 class ProductUpdateDTO(BaseModel):
     description: Optional[str] = Field(None, min_length=1)
-    barcode: Optional[str] = Field(None, min_length=1)
+    barcode: Optional[str] = Field(None, pattern=r"^(?:\d{12,14}|[A-Z0-9]{6})$")
     price_per_unit: Optional[float] = Field(None, gt=0)
     note: Optional[str] = Field(None, min_length=1)
     quantity: Optional[int] = Field(None, ge=0)

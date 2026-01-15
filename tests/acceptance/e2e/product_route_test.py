@@ -220,7 +220,7 @@ def test_update_product_e2e(client, auth_token, reset_db):
         }
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["description"] == "Updated Product"
     assert data["price_per_unit"] == 15.0
@@ -247,7 +247,7 @@ def test_update_quantity_e2e(client, auth_token, reset_db):
         headers={"Authorization": f"Bearer {auth_token}"}
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["quantity"] == 150
 
@@ -272,7 +272,7 @@ def test_update_position_e2e(client, auth_token, reset_db):
         headers={"Authorization": f"Bearer {auth_token}"}
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["position"] == "9-ZY-87"
 

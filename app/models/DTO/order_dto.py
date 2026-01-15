@@ -4,13 +4,13 @@ from datetime import datetime
 
 
 class OrderCreateDTO(BaseModel):
-    product_barcode: str = Field(..., min_length=1)
+    product_barcode: str = Field(..., pattern=r"^\d{12,14}$")
     quantity: int = Field(..., gt=0)
     price_per_unit: float = Field(..., gt=0)
 
 
 class OrderPayForDTO(BaseModel):
-    product_barcode: str = Field(..., min_length=1)
+    product_barcode: str = Field(..., pattern=r"^\d{12,14}$")
     quantity: int = Field(..., gt=0)
     price_per_unit: float = Field(..., gt=0)
 

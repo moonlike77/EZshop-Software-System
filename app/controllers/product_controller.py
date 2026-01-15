@@ -2,6 +2,7 @@ from typing import List, Optional
 from app.repositories.product_repository import ProductRepository
 from app.models.DTO.product_dto import ProductCreateDTO, ProductUpdateDTO, ProductResponseDTO
 from app.services.mapper_service import productdao_to_responsedto
+from app.models.errors.bad_request import BadRequestError
 
 
 class ProductController:
@@ -46,6 +47,11 @@ class ProductController:
         product_dto: ProductUpdateDTO
     ) -> ProductResponseDTO:
         """Update product - throws NotFoundError if not found, ConflictError if new barcode exists"""
+        if product_dto.quantity is not None:
+            raise BadRequestError("Quantity cannot be updated with PUT /products; use PATCH /products/{id}/quantity")
+        if product_dto.position is not None:
+            raise BadRequestError("Position cannot be updated with PUT /products; use PATCH /products/{id}/position")
+
         updated = await self.repo.update_product(
             product_id=product_id,
             description=product_dto.description,
@@ -55,7 +61,7 @@ class ProductController:
             quantity=product_dto.quantity,
             position=product_dto.position
         )
-        return productdao_to_responsedto(updated) if updated else None
+        return productdao_to_responsedto(updated)
 
     async def update_quantity(self, product_id: int, quantity_change: int) -> ProductResponseDTO:
         """Update product quantity"""

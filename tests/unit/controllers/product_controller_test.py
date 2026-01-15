@@ -1,5 +1,5 @@
 """
-Integration tests for ProductController
+Unit tests for ProductController
 Tests the controller layer with mocked repository
 """
 import pytest
@@ -11,6 +11,7 @@ from app.models.DTO.product_dto import (
     ProductResponseDTO
 )
 from app.models.DAO.product_dao import ProductDAO
+from app.models.errors.bad_request import BadRequestError
 
 
 @pytest.mark.asyncio
@@ -203,6 +204,38 @@ async def test_update_product():
             position=None
         )
         assert isinstance(result, ProductResponseDTO)
+
+
+@pytest.mark.asyncio
+async def test_update_product_rejects_quantity_field():
+    """PUT product update must not allow quantity updates (use PATCH endpoint)."""
+    mock_repo = MagicMock()
+    mock_repo.update_product = AsyncMock()
+
+    with patch('app.controllers.product_controller.ProductRepository', return_value=mock_repo):
+        controller = ProductController()
+        input_dto = ProductUpdateDTO(quantity=10)
+
+        with pytest.raises(BadRequestError):
+            await controller.update_product(1, input_dto)
+
+        mock_repo.update_product.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_update_product_rejects_position_field():
+    """PUT product update must not allow position updates (use PATCH endpoint)."""
+    mock_repo = MagicMock()
+    mock_repo.update_product = AsyncMock()
+
+    with patch('app.controllers.product_controller.ProductRepository', return_value=mock_repo):
+        controller = ProductController()
+        input_dto = ProductUpdateDTO(position="1-A-1")
+
+        with pytest.raises(BadRequestError):
+            await controller.update_product(1, input_dto)
+
+        mock_repo.update_product.assert_not_called()
 
 
 @pytest.mark.asyncio
