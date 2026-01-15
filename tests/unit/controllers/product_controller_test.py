@@ -1,5 +1,5 @@
 """
-Integration tests for ProductController
+Unit tests for ProductController
 Tests the controller layer with mocked repository
 """
 import pytest

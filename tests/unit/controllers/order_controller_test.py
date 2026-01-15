@@ -1,5 +1,5 @@
 """
-Integration tests for OrderController
+Unit tests for OrderController
 Tests the controller layer with mocked repository
 """
 import pytest
