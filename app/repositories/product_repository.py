@@ -173,6 +173,20 @@ class ProductRepository:
                         "Position must match pattern <digits>-<letters>-<digits> (e.g., 1-A-3)"
                     )
 
+                # Position must be unique across products
+                result = await session.execute(
+                    select(ProductDAO).filter(
+                        ProductDAO.position == position,
+                        ProductDAO.id != product_id,
+                    )
+                )
+                conflicting_products = result.scalars().all()
+                throw_conflict_if_found(
+                    conflicting_products,
+                    lambda _: True,
+                    f"Position '{position}' is already assigned to another product",
+                )
+
             db_product.position = position if position != "" else None
             await session.commit()
             await session.refresh(db_product)

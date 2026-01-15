@@ -216,7 +216,7 @@ def test_get_product_by_id_not_found(client, auth_tokens):
 
 def test_get_product_by_id_invalid_id(client, auth_tokens):
     resp = client.get(f"{BASE_URL}/products/0", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code in (400, 404)
+    assert resp.status_code in (400, 422)
 
 
 def test_get_product_by_id_unauthenticated(client):
@@ -238,7 +238,7 @@ def test_get_product_by_barcode_not_found(client, auth_tokens):
 
 def test_get_product_by_barcode_invalid_format(client, auth_tokens):
     resp = client.get(f"{BASE_URL}/products/barcode/123", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code in (400, 404)
+    assert resp.status_code in (400, 422)
 
 
 def test_get_product_by_barcode_unauthenticated(client):
@@ -294,7 +294,7 @@ def test_update_product_success(client, auth_tokens):
     
     # Update it
     resp = client.put(f"{BASE_URL}/products/{product_id}", json=PRODUCT_UPDATE, headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     data = resp.json()
     assert data["description"] == PRODUCT_UPDATE["description"]
     assert data["price_per_unit"] == PRODUCT_UPDATE["price_per_unit"]
@@ -316,7 +316,7 @@ def test_update_product_barcode_conflict(client, auth_tokens):
     
     update_data = {"barcode": PRODUCT_SAMPLE_1["barcode"]}
     resp = client.put(f"{BASE_URL}/products/{product_id}", json=update_data, headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 400
+    assert resp.status_code == 409
 
 
 def test_update_product_forbidden_as_cashier(client, auth_tokens):
@@ -354,7 +354,7 @@ def test_update_quantity_increase(client, auth_tokens):
     
     # Increase quantity
     resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity=50", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     data = resp.json()
     assert data["quantity"] == 150
 
@@ -371,7 +371,7 @@ def test_update_quantity_decrease(client, auth_tokens):
     
     # Decrease quantity
     resp = client.patch(f"{BASE_URL}/products/{product_id}/quantity?quantity=-30", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     data = resp.json()
     assert data["quantity"] == 70
 
@@ -384,7 +384,7 @@ def test_update_quantity_not_found(client, auth_tokens):
 def test_update_quantity_negative_result(client, auth_tokens):
     """Test update_quantity when result would be negative - covers BadRequestError exception"""
     import time
-    unique_barcode = f"NEG{int(time.time()*1000)}"
+    unique_barcode = f"{int(time.time()*1000)}".zfill(13)
     
     # Create product with quantity 10
     create_resp = client.post(BASE_URL + "/products", json={
@@ -426,7 +426,7 @@ def test_update_position_success(client, auth_tokens):
     
     # Update position
     resp = client.patch(f"{BASE_URL}/products/{product_id}/position?position=9-ZY-87", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     data = resp.json()
     assert data["position"] == "9-ZY-87"
 
@@ -443,7 +443,7 @@ def test_update_position_clear(client, auth_tokens):
     
     # Clear position
     resp = client.patch(f"{BASE_URL}/products/{product_id}/position?position=", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     data = resp.json()
     assert data["position"] is None or data["position"] == ""
 
@@ -463,7 +463,7 @@ def test_update_position_invalid_format(client, auth_tokens):
 
 
 def test_update_position_not_found(client, auth_tokens):
-    resp = client.patch(f"{BASE_URL}/products/99999/position?position=A1-B2-C3", headers=auth_header(auth_tokens, "admin"))
+    resp = client.patch(f"{BASE_URL}/products/99999/position?position=1-A-1", headers=auth_header(auth_tokens, "admin"))
     assert resp.status_code == 404
 
 

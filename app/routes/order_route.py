@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Path
 from typing import List
 from app.models.DTO.order_dto import (
     OrderCreateDTO,
@@ -12,6 +12,7 @@ from app.config.config import ROUTES
 from fastapi import Response
 from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.bad_request import BadRequestError
+from app.models.errors.app_error import AppError
 
 
 router = APIRouter(prefix=ROUTES['V1_ORDERS'], tags=["Orders"])
@@ -37,8 +38,8 @@ async def issue_order(order: OrderCreateDTO):
 
     try:
         return await controller.create_order(order)
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except AppError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
 
 
 @router.get("/",
@@ -58,7 +59,7 @@ async def list_orders():
 @router.get("/{order_id}",
     response_model=OrderResponseDTO,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.ShopManager]))])
-async def get_order(order_id: int):
+async def get_order(order_id: int = Path(..., gt=0)):
     """
     Get a specific order by ID.
 
@@ -71,8 +72,8 @@ async def get_order(order_id: int):
     """
     try:
         return await controller.get_order_by_id(order_id)
-    except NotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Order with id '{order_id}' not found")
+    except AppError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
 
 
 @router.post("/payfor",
@@ -93,17 +94,15 @@ async def pay_for_order(order: OrderPayForDTO):
     """
     try:
         return await controller.create_and_pay_order(order)
-    except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-    except BadRequestError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except AppError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
 
 
 @router.patch("/{order_id}/pay",
     response_model=OrderResponseDTO,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.ShopManager]))])
-async def pay_order(order_id: int):
+async def pay_order(order_id: int = Path(..., gt=0)):
     """
     Pay for an existing ISSUED order.
 
@@ -117,17 +116,15 @@ async def pay_order(order_id: int):
     """
     try:
         return await controller.pay_order(order_id)
-    except NotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Order with id '{order_id}' not found")
-    except BadRequestError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except AppError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
 
 
 @router.patch("/{order_id}/arrival",
     response_model=OrderResponseDTO,
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.ShopManager]))])
-async def record_order_arrival(order_id: int):
+async def record_order_arrival(order_id: int = Path(..., gt=0)):
     """
     Record the arrival of a PAID order.
 
@@ -141,16 +138,14 @@ async def record_order_arrival(order_id: int):
     """
     try:
         return await controller.record_order_arrival(order_id)
-    except NotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Order with id '{order_id}' not found")
-    except BadRequestError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except AppError as e:
+        raise HTTPException(status_code=e.status, detail=str(e))
 
 
 @router.delete("/{order_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     dependencies=[Depends(authenticate_user([UserType.Administrator]))])
-async def delete_order(order_id: int):
+async def delete_order(order_id: int = Path(..., gt=0)):
     """
     Delete an order by ID.
 
