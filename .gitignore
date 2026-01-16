@@ -10,3 +10,4 @@ app/data/database.sqlite
 .venv
 reports/
 .myfile.md
+htmlcov/

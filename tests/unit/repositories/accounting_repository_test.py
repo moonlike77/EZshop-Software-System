@@ -22,18 +22,18 @@ async def setup_db():
 
 @pytest.mark.asyncio
 async def test_repository_coverage_edge_cases(setup_db):
-    # 1. Test Session Injection
+    # Test Session Injection
     mock_session = "Mock Session"
     repo_with_session = TransactionRepository(session=mock_session)
     assert await repo_with_session._get_session() == mock_session
 
-    # 2. Test Set Balance No Change
+    # Test Set Balance No Change
     repo = TransactionRepository()
     await repo.set_balance(100.0, 1)
     tx = await repo.set_balance(100.0, 1)
     assert tx.amount == 0.0
     
-    # 3. Test Partial Date Filters
+    # Test Partial Date Filters
     start = datetime(2000, 1, 1)
     end = datetime(2099, 12, 31)
     res_start = await repo.get_transactions(start_date=start, end_date=None)
@@ -41,7 +41,7 @@ async def test_repository_coverage_edge_cases(setup_db):
     res_end = await repo.get_transactions(start_date=None, end_date=end)
     assert isinstance(res_end, list)
 
-    # 4. Test Missing System Info
+    # Test Missing System Info
     async with AsyncSessionLocal() as session:
         await session.execute(delete(SystemInfoDAO))
         await session.commit()
@@ -53,7 +53,7 @@ async def test_repository_coverage_edge_cases(setup_db):
     bal_new = await repo.get_balance()
     assert bal_new == 10.0
 
-    # 5. Test set_balance with Missing System Info
+    # Test set_balance with Missing System Info
     async with AsyncSessionLocal() as session:
         await session.execute(delete(SystemInfoDAO))
         await session.commit()
@@ -61,3 +61,12 @@ async def test_repository_coverage_edge_cases(setup_db):
     await repo.set_balance(50.0, 1)
     bal_after_set = await repo.get_balance()
     assert bal_after_set == 50.0
+
+    # Test set_balance Decrease (Cover DEBIT case)
+    repo = TransactionRepository()
+    await repo.set_balance(100.0, 1)
+    tx = await repo.set_balance(40.0, 1) # 100 -> 40 = -60 (DEBIT)
+    assert tx.amount == 60.0
+    assert tx.type == TransactionType.DEBIT
+    final_bal = await repo.get_balance()
+    assert final_bal == 40.0
