@@ -6,7 +6,7 @@ from main import app
 from init_db import reset, init_db
 from app.database import database
 
-# Local fixtures since global conftest is restricted
+
 
 @pytest.fixture(scope="session")
 def event_loop():
