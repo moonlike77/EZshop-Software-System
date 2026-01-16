@@ -15,13 +15,18 @@
 
 # Dependency graph
 
-|  \<report the here the dependency graph of EzShop\> |
-| :---- |
+     <report the here the dependency graph of EzShop>
 
 # Integration approach
 
-| \<Write here the integration sequence you adopted, in general terms (top down, bottom up, mixed) and as sequence (ex: step1: unit A, step 2: unit A+B, step 3: unit A+B+C, etc)\> \<Some steps may  correspond to unit testing (ex step1 in ex above)\> \<One step will  correspond to API testing \> |
-| :---- |
+    <Write here the integration sequence you adopted, in general terms (top down, bottom up, mixed) and as sequence
+
+    (ex: step1: unit A, step 2: unit A+B, step 3: unit A+B+C, etc)>
+
+    <Some steps may  correspond to unit testing (ex step1 in ex above)>
+
+    <One step will  correspond to API testing >
+
 
 # Tests
 
