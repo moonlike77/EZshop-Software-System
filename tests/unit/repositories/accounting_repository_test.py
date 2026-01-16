@@ -13,8 +13,15 @@ from init_db import reset, init_db
 # REPOSITORY TESTS
 # ---------------------------------------------------------------------
 
+@pytest_asyncio.fixture
+async def setup_db():
+    from app.database import database
+    await database.init_db()
+    yield
+    await database.reset_db()
+
 @pytest.mark.asyncio
-async def test_repository_coverage_edge_cases():
+async def test_repository_coverage_edge_cases(setup_db):
     # 1. Test Session Injection
     mock_session = "Mock Session"
     repo_with_session = TransactionRepository(session=mock_session)
