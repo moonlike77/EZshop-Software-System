@@ -44,20 +44,11 @@ BASE_URL = "http://127.0.0.1:8000/api/v1"
 @pytest.mark.asyncio
 async def test_create_customer_success(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.create_customer = AsyncMock()
+    payload = {"name": "Mario Rossi"}
+    resp = client.post(BASE_URL + "/customers", json=payload, headers=auth_header(auth_tokens, "admin"))
 
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    mock_controller.create_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        payload = {"name": "Mario Rossi"}
-        resp = client.post(BASE_URL + "/customers", json=payload, headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 201
-        assert resp.json()["name"] == "Mario Rossi"
-        mock_controller.create_customer.assert_called_once()
+    assert resp.status_code == 201
+    assert resp.json()["name"] == "Mario Rossi"
 
 @pytest.mark.asyncio
 async def test_create_customer_bad_request(client, auth_tokens):
@@ -70,252 +61,117 @@ async def test_create_customer_bad_request(client, auth_tokens):
 @pytest.mark.asyncio
 async def test_get_all_customers_success(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.list_customers = AsyncMock()
+    payload = {"name": "Luca Bianchi"}
+    resp = client.post(BASE_URL + "/customers", json=payload, headers=auth_header(auth_tokens, "admin"))
 
-    cust1 = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    cust2 = CustomerDTO(id=2, name="Luca Bianchi", card=None)
-    mock_controller.list_customers.return_value = [cust1, cust2]
+    resp = client.get(BASE_URL + "/customers", headers=auth_header(auth_tokens, "admin"))
 
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.get(BASE_URL + "/customers", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 200
-        assert resp.json()[0]["name"] == "Mario Rossi"
-        assert resp.json()[1]["name"] == "Luca Bianchi"
-        mock_controller.list_customers.assert_called_once()
+    assert resp.status_code == 200
+    assert resp.json()[0]["name"] == "Mario Rossi"
+    assert resp.json()[1]["name"] == "Luca Bianchi"
 
 @pytest.mark.asyncio
 async def test_get_customer_success(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.get_customer = AsyncMock()
+    resp = client.get(BASE_URL + "/customers/1", headers=auth_header(auth_tokens, "admin"))
 
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    mock_controller.get_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.get(BASE_URL + "/customers/1", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 200
-        assert resp.json()["name"] == "Mario Rossi"
-        mock_controller.get_customer.assert_called_once_with(1)
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "Mario Rossi"
         
 @pytest.mark.asyncio
 async def test_get_customer_invalid_id(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.get_customer = AsyncMock()
+    resp = client.get(BASE_URL + "/customers/-1", headers=auth_header(auth_tokens, "admin"))
 
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    mock_controller.get_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.get(BASE_URL + "/customers/-1", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 400
+    assert resp.status_code == 400
 
 @pytest.mark.asyncio
 async def test_get_customer_not_found(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.get_customer = AsyncMock()
+    resp = client.get(BASE_URL + "/customers/999", headers=auth_header(auth_tokens, "admin"))
 
-    mock_controller.get_customer.return_value = None
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.get(BASE_URL + "/customers/999", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 404
-        mock_controller.get_customer.assert_called_once_with(999)
+    assert resp.status_code == 404
 
 @pytest.mark.asyncio
 async def test_update_customer_success(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.update_customer = AsyncMock()
+    payload = {"name": "Mario Neri", "card": None}
+    resp = client.put(BASE_URL + "/customers/1", json=payload, headers=auth_header(auth_tokens, "admin"))
 
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    mock_controller.update_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        payload = {"name": "Mario Rossi", "card": None}
-        resp = client.put(BASE_URL + "/customers/1", json=payload, headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 201
-        assert resp.json()["name"] == "Mario Rossi"
-        mock_controller.update_customer.assert_called_once()
+    assert resp.status_code == 201
+    assert resp.json()["name"] == "Mario Neri"
 
 @pytest.mark.asyncio
 async def test_update_customer_invalid_id(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.update_customer = AsyncMock()
+    payload = {"name": "Mario Rossi", "card": None}
+    resp = client.put(BASE_URL + "/customers/-1", json=payload, headers=auth_header(auth_tokens, "admin"))
 
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    mock_controller.update_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        payload = {"name": "Mario Rossi", "card": None}
-        resp = client.put(BASE_URL + "/customers/-1", json=payload, headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 400
+    assert resp.status_code == 400
 
 @pytest.mark.asyncio
 async def test_update_customer_invalid_payload(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.update_customer = AsyncMock()
+    payload = {"name": "", "card": None}
+    resp = client.put(BASE_URL + "/customers/1", json=payload, headers=auth_header(auth_tokens, "admin"))
 
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=None)
-    mock_controller.update_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        payload = {"name": "", "card": None}
-        resp = client.put(BASE_URL + "/customers/1", json=payload, headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 400
+    assert resp.status_code == 400
 
 @pytest.mark.asyncio
 async def test_update_customer_not_found(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.update_customer = AsyncMock()
+    payload = {"name": "Mario Rossi", "card": None}
+    resp = client.put(BASE_URL + "/customers/999", json=payload, headers=auth_header(auth_tokens, "admin"))
 
-    mock_controller.update_customer.return_value = None
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        payload = {"name": "Mario Rossi", "card": None}
-        resp = client.put(BASE_URL + "/customers/1", json=payload, headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 404
-        mock_controller.update_customer.assert_called_once()
-
-@pytest.mark.asyncio
-async def test_delete_customer_success(client, auth_tokens):
-
-    mock_controller = MagicMock()
-    mock_controller.delete_customer = AsyncMock()
-
-    mock_controller.delete_customer.return_value = True
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.delete(BASE_URL + "/customers/1", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 204
-        mock_controller.delete_customer.assert_called_once()
-
-@pytest.mark.asyncio
-async def test_delete_customer_not_found(client, auth_tokens):
-
-    mock_controller = MagicMock()
-    mock_controller.delete_customer = AsyncMock()
-
-    mock_controller.delete_customer.return_value = None
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.delete(BASE_URL + "/customers/1", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 404
-        mock_controller.delete_customer.assert_called_once()
+    assert resp.status_code == 404
 
 @pytest.mark.asyncio
 async def test_create_loyalty_card_success(client, auth_tokens):
 
-    mock_card_controller = MagicMock()
-    mock_card_controller.create_loyalty_card = AsyncMock()
+    resp = client.post(BASE_URL + "/customers/cards", headers=auth_header(auth_tokens, "admin"))
 
-    card = LoyaltyCardDTO(card_id="0000000001", points=0)
-    mock_card_controller.create_loyalty_card.return_value = card
-
-    with patch('app.routes.customer_route.card_controller', mock_card_controller):
-
-        resp = client.post(BASE_URL + "/customers/cards", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 201
-        mock_card_controller.create_loyalty_card.assert_called_once()
+    assert resp.status_code == 201
 
 @pytest.mark.asyncio
 async def test_attach_loyalty_card_to_customer_success(client, auth_tokens):
 
-    mock_controller = MagicMock()
-    mock_controller.attach_loyalty_card_to_customer = AsyncMock()
+    resp = client.patch(BASE_URL + "/customers/1/attach-card/0000000001", headers=auth_header(auth_tokens, "admin"))
 
-    card = LoyaltyCardDTO(card_id="0000000001", points=0)
-    cust = CustomerDTO(id=1, name="Mario Rossi", card=card)
-    mock_controller.attach_loyalty_card_to_customer.return_value = cust
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.patch(BASE_URL + "/customers/1/attach-card/0000000001", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 201
-        assert resp.json()["card"]["card_id"] == "0000000001"
-        mock_controller.attach_loyalty_card_to_customer.assert_called_once()
+    assert resp.status_code == 201
+    assert resp.json()["card"]["card_id"] == "0000000001"
 
 @pytest.mark.asyncio
 async def test_attach_card_not_found_error(client, auth_tokens):
-    mock_controller = MagicMock()
-    mock_controller.attach_loyalty_card_to_customer = AsyncMock(
-        side_effect=NotFoundError("Customer not found")
-    )
 
-    with patch('app.routes.customer_route.controller', mock_controller):
+    resp = client.patch(f"{BASE_URL}/customers/999/attach-card/0000000001", headers=auth_header(auth_tokens, "admin"))
 
-        resp = client.patch(f"{BASE_URL}/customers/999/attach-card/001", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 404
+    assert resp.status_code == 404
 
 @pytest.mark.asyncio
 async def test_attach_card_conflict_error(client, auth_tokens):
-    mock_controller = MagicMock()
 
-    mock_controller.attach_loyalty_card_to_customer = AsyncMock(
-        side_effect=ConflictError("Card already attached")
-    )
+    resp = client.patch(f"{BASE_URL}/customers/2/attach-card/0000000001", headers=auth_header(auth_tokens, "admin"))
 
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.patch(f"{BASE_URL}/customers/1/attach-card/001", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 409
-
-@pytest.mark.asyncio
-async def test_attach_card_return_none_logic(client, auth_tokens):
-    mock_controller = MagicMock()
-
-    mock_controller.attach_loyalty_card_to_customer = AsyncMock()
-    mock_controller.attach_loyalty_card_to_customer.return_value = None
-
-    with patch('app.routes.customer_route.controller', mock_controller):
-
-        resp = client.patch(f"{BASE_URL}/customers/1/attach-card/001", headers=auth_header(auth_tokens, "admin"))
-
-        assert resp.status_code == 409
+    assert resp.status_code == 409
 
 @pytest.mark.asyncio
 async def test_update_loyalty_card_points_success(client, auth_tokens):
 
-    mock_card_controller = MagicMock()
-    mock_card_controller.update_loyalty_card_points = AsyncMock()
+    resp = client.patch(BASE_URL + "/customers/cards/1?points=30", headers=auth_header(auth_tokens, "admin"))
 
-    card = LoyaltyCardDTO(card_id="0000000001", points=30)
-    mock_card_controller.update_loyalty_card_points.return_value = card
+    assert resp.status_code == 201
+    assert resp.json()["points"] == 30
 
-    with patch('app.routes.customer_route.card_controller', mock_card_controller):
+@pytest.mark.asyncio
+async def test_delete_customer_success(client, auth_tokens):
 
-        resp = client.patch(BASE_URL + "/customers/cards/1?points=30", headers=auth_header(auth_tokens, "admin"))
+    resp = client.delete(BASE_URL + "/customers/1", headers=auth_header(auth_tokens, "admin"))
 
-        assert resp.status_code == 201
-        assert resp.json()["points"] == 30
-        mock_card_controller.update_loyalty_card_points.assert_called_once()
+    assert resp.status_code == 204
+
+@pytest.mark.asyncio
+async def test_delete_customer_not_found(client, auth_tokens):
+
+    resp = client.delete(BASE_URL + "/customers/1", headers=auth_header(auth_tokens, "admin"))
+
+    assert resp.status_code == 404
