@@ -26,7 +26,6 @@ class TransactionRepository:
             session.add(transaction)
 
             # Update system balance
-            # Assuming there is only one system info row, or we create one if not exists
             result = await session.execute(select(SystemInfoDAO).limit(1))
             system_info = result.scalars().first()
             
@@ -69,7 +68,7 @@ class TransactionRepository:
 
     async def set_balance(self, amount: float, user_id: int | None) -> TransactionDAO:
         async with await self._get_session() as session:
-            # Get current balance (transactional, locking might be needed in real world but ok for now)
+            # Get current balance
             result = await session.execute(select(SystemInfoDAO).limit(1))
             system_info = result.scalars().first()
             
@@ -83,11 +82,6 @@ class TransactionRepository:
             difference = amount - current_balance
             
             if difference == 0:
-                # No change needed, but maybe we want to log it? 
-                # For now let's create a 0 amount transaction or just return a dummy
-                # Postman doesn't specify behavior for 0 change. 
-                # Let's create a transaction for record.
-                # Assuming 0 diff is "CREDIT" 0.0
                 correction_type = TransactionType.CREDIT
                 correction_amount = 0.0
             elif difference > 0:
@@ -108,8 +102,6 @@ class TransactionRepository:
             session.add(transaction)
             
             # Update balance
-            # We can trust our calc: current + diff = amount, OR just force set it.
-            # Force setting is safer to match exact request.
             system_info.balance = amount
             
             await session.commit()

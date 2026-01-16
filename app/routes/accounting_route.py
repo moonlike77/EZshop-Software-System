@@ -15,7 +15,6 @@ controller = AccountingController()
 # Allowed roles: Administrator only for sensitive balance operations
 ADMIN_ONLY = [UserType.Administrator]
 
-
 @router.get("/balance", 
     response_model=BalanceResponseDTO)
 async def get_balance(
