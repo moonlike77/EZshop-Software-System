@@ -4,8 +4,6 @@ from datetime import datetime
 
 from app.config.config import ROUTES
 from app.controllers.accounting_controller import AccountingController
-from app.config.config import ROUTES
-from app.controllers.accounting_controller import AccountingController
 from app.models.DTO.transaction_dto import TransactionCreateDTO, TransactionResponseDTO, BalanceResponseDTO
 from app.models.user_type import UserType
 from app.middleware.auth_middleware import authenticate_user
