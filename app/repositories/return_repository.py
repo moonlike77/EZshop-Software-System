@@ -13,6 +13,7 @@ from app.models.DAO.return_dao import ReturnDAO, ReturnLineDAO
 from app.models.return_status import ReturnStatus
 from app.models.sale_status import SaleStatus
 from app.models.errors.bad_request import BadRequestError
+from app.models.errors.invalid_state_error import InvalidStateError
 
 class ReturnRepository:
     def __init__(self, session: Optional[AsyncSession] = None):
@@ -35,7 +36,7 @@ class ReturnRepository:
             )
 
             if sale.status != SaleStatus.PAID:
-                raise BadRequestError(f"Sale with id '{sale.id}' is not paid")
+                raise InvalidStateError(f"Sale transaction is not PAID (current: {sale.status})")
             new_return = ReturnDAO(sale_id=sale_id, status=ReturnStatus.OPEN)
             session.add(new_return)
             await session.commit()
