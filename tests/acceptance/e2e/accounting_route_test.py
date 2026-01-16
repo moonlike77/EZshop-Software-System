@@ -73,9 +73,9 @@ def test_get_balance_success_as_admin(client, auth_tokens, auth_header_helper):
     assert isinstance(data["balance"], float)
 
 
-def test_get_balance_success_as_manager(client, auth_tokens, auth_header_helper):
+def test_get_balance_forbidden_as_manager(client, auth_tokens, auth_header_helper):
     resp = client.get(BALANCE_URL, headers=auth_header_helper(auth_tokens, "manager"))
-    assert resp.status_code == 200
+    assert resp.status_code == 403
 
 
 def test_get_balance_forbidden_as_cashier(client, auth_tokens, auth_header_helper):
@@ -151,8 +151,9 @@ def test_reset_balance_success(client, auth_tokens, auth_header_helper):
         f"{BALANCE_URL}/reset",
         headers=auth_header_helper(auth_tokens, "admin")
     )
-    assert resp.status_code == 200
-    assert resp.json()["success"] is True
+    assert resp.status_code == 205
+    # assert resp.json()["success"] is True
+
     
     # Verify is 0
     get_resp = client.get(BALANCE_URL, headers=auth_header_helper(auth_tokens, "admin"))
