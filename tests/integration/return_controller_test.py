@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from app.controllers.return_controller import ReturnController
 from app.models.return_status import ReturnStatus
 from app.models.DAO.sale_dao import SaleDAO

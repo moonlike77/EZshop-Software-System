@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 from app.controllers.customer_controller import CustomerController
 from app.controllers.loyalty_card_controller import LoyaltyCardController
 from app.models.errors.notfound_error import NotFoundError
