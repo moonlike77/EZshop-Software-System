@@ -14,12 +14,10 @@ def _make_sale_dao(
     status: SaleStatus = SaleStatus.OPEN,
     discount_rate: float = 0.0
 ) -> SaleDAO:
-    # Usiamo il vero SaleDAO (niente FakeSaleDAO)
     sale = SaleDAO(
         status=status,
         discount_rate=discount_rate,
     )
-    # di solito id/created_at arrivano dal DB, ma per il controller basta averli
     sale.id = sale_id
     sale.created_at = datetime.now(timezone.utc)
     sale.closed_at = None
