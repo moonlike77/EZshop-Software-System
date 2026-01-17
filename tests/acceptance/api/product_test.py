@@ -1,7 +1,3 @@
-"""
-API tests for product routes
-Tests the API layer with authentication and request/response validation
-"""
 import pytest
 import asyncio
 from fastapi.testclient import TestClient
@@ -31,9 +27,7 @@ BASE_URL = "http://127.0.0.1:8000/api/v1"
 # ---------------------------
 
 @pytest.fixture(scope="session", autouse=True)
-def auth_tokens(event_loop, client):
-    """Authenticate users once and return their JWT tokens."""
-    
+def auth_tokens(event_loop, client):    
     event_loop.run_until_complete(reset())
     event_loop.run_until_complete(init_db())
     
@@ -382,7 +376,6 @@ def test_update_quantity_not_found(client, auth_tokens):
 
 
 def test_update_quantity_negative_result(client, auth_tokens):
-    """Test update_quantity when result would be negative - covers BadRequestError exception"""
     import time
     unique_barcode = f"{int(time.time()*1000)}".zfill(13)
     
