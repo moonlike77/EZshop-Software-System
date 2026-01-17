@@ -28,6 +28,11 @@ async def get_all_returns():
     """Get all return transactions"""
     return await controller.list_returns()
 
+@router.get("/sale/{sale_id}", response_model=List[ReturnDTO], dependencies=[Depends(authenticate_user(ALL_ROLES))])
+async def get_all_returns_by_sale(sale_id: int):
+    """Get all return transactions"""
+    return await controller.get_returns_by_sale(sale_id)
+
 @router.get("/{return_id}", response_model=ReturnDTO, dependencies=[Depends(authenticate_user(ALL_ROLES))])
 async def get_return(return_id: int = Path(..., gt=0)):
     """Get a specific return transaction"""
