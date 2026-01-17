@@ -1,7 +1,3 @@
-"""
-Unit tests for OrderRepository
-Tests the repository layer in isolation with real database operations
-"""
 import pytest
 import pytest_asyncio
 from init_db import reset, init_db
@@ -20,7 +16,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_database():
-    """Reset and initialize database before each test"""
     await reset()
     await init_db()
 
@@ -42,7 +37,6 @@ def system_repository():
 
 @pytest.mark.asyncio
 async def test_create_order_success(order_repository, product_repository):
-    """Test creating an order successfully"""
     # Create a product first
     product = await product_repository.create_product(
         description="Test Product",
@@ -67,7 +61,6 @@ async def test_create_order_success(order_repository, product_repository):
 
 @pytest.mark.asyncio
 async def test_get_order_success(order_repository, product_repository):
-    """Test retrieving an order by ID"""
     product = await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -87,21 +80,18 @@ async def test_get_order_success(order_repository, product_repository):
 
 @pytest.mark.asyncio
 async def test_get_order_not_found(order_repository):
-    """Test getting non-existent order raises NotFoundError"""
     with pytest.raises(NotFoundError):
         await order_repository.get_order(999)
 
 
 @pytest.mark.asyncio
 async def test_get_all_orders_empty(order_repository):
-    """Test getting all orders when none exist"""
     orders = await order_repository.get_all_orders()
     assert len(orders) == 0
 
 
 @pytest.mark.asyncio
 async def test_get_all_orders_success(order_repository, product_repository):
-    """Test retrieving all orders"""
     product = await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -116,7 +106,6 @@ async def test_get_all_orders_success(order_repository, product_repository):
 
 @pytest.mark.asyncio
 async def test_pay_order_success(order_repository, product_repository, system_repository):
-    """Test paying for an issued order"""
     # Set system balance
     await system_repository.set_balance(1000.0)
     
@@ -138,14 +127,12 @@ async def test_pay_order_success(order_repository, product_repository, system_re
 
 @pytest.mark.asyncio
 async def test_pay_order_not_found(order_repository):
-    """Test paying for non-existent order"""
     with pytest.raises(NotFoundError):
         await order_repository.pay_order(999)
 
 
 @pytest.mark.asyncio
 async def test_pay_order_wrong_status(order_repository, product_repository, system_repository):
-    """Test paying for order that's not in ISSUED state"""
     await system_repository.set_balance(1000.0)
     
     product = await product_repository.create_product(
@@ -164,7 +151,6 @@ async def test_pay_order_wrong_status(order_repository, product_repository, syst
 
 @pytest.mark.asyncio
 async def test_pay_order_insufficient_balance(order_repository, product_repository, system_repository):
-    """Test paying for order with insufficient balance"""
     await system_repository.set_balance(10.0)  # Low balance
     
     product = await product_repository.create_product(
@@ -182,7 +168,6 @@ async def test_pay_order_insufficient_balance(order_repository, product_reposito
 
 @pytest.mark.asyncio
 async def test_record_order_arrival_success(order_repository, product_repository, system_repository):
-    """Test recording arrival for a paid order"""
     await system_repository.set_balance(1000.0)
     
     product = await product_repository.create_product(
@@ -206,14 +191,12 @@ async def test_record_order_arrival_success(order_repository, product_repository
 
 @pytest.mark.asyncio
 async def test_record_arrival_not_found(order_repository):
-    """Test recording arrival for non-existent order"""
     with pytest.raises(NotFoundError):
         await order_repository.record_order_arrival(999)
 
 
 @pytest.mark.asyncio
 async def test_record_arrival_wrong_status(order_repository, product_repository):
-    """Test recording arrival for order not in PAID state"""
     product = await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -229,7 +212,6 @@ async def test_record_arrival_wrong_status(order_repository, product_repository)
 
 @pytest.mark.asyncio
 async def test_record_arrival_no_position(order_repository, product_repository, system_repository):
-    """Test recording arrival when product has no position"""
     await system_repository.set_balance(1000.0)
     
     product = await product_repository.create_product(
@@ -248,7 +230,6 @@ async def test_record_arrival_no_position(order_repository, product_repository, 
 
 @pytest.mark.asyncio
 async def test_delete_order_success(order_repository, product_repository):
-    """Test deleting an order"""
     product = await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -267,14 +248,12 @@ async def test_delete_order_success(order_repository, product_repository):
 
 @pytest.mark.asyncio
 async def test_delete_order_not_found(order_repository):
-    """Test deleting non-existent order"""
     with pytest.raises(NotFoundError):
         await order_repository.delete_order(999)
 
 
 @pytest.mark.asyncio
 async def test_get_system_info_creates_if_missing(order_repository):
-    """Test that _get_system_info creates system info if missing"""
     # This tests the internal helper method indirectly
     from app.database.database import AsyncSessionLocal
     from sqlalchemy import text
@@ -292,7 +271,6 @@ async def test_get_system_info_creates_if_missing(order_repository):
 
 @pytest.mark.asyncio
 async def test_record_arrival_orphaned_order(order_repository):
-    """Test record arrival when order exists but product does not (orphaned)"""
     mock_session = AsyncMock()
     # Need to simulate context manager behavior
     mock_session.__aenter__.return_value = mock_session
@@ -326,7 +304,6 @@ async def test_record_arrival_orphaned_order(order_repository):
 
 @pytest.mark.asyncio
 async def test_issue_reorder_warning_success(order_repository, product_repository, system_repository):
-    """FR4.3: Test issuing a reorder warning successfully"""
     # Create a product first
     product = await product_repository.create_product(
         description="Low Stock Product",
@@ -355,7 +332,6 @@ async def test_issue_reorder_warning_success(order_repository, product_repositor
 
 @pytest.mark.asyncio
 async def test_pay_reorder_warning_success(order_repository, product_repository, system_repository):
-    """FR4.5: Test paying for a reorder warning successfully"""
     # Create a product
     product = await product_repository.create_product(
         description="Low Stock Product",
@@ -395,7 +371,6 @@ async def test_pay_reorder_warning_success(order_repository, product_repository,
 
 @pytest.mark.asyncio
 async def test_pay_reorder_warning_not_found(order_repository):
-    """FR4.5: Test paying for non-existent reorder warning"""
     with pytest.raises(NotFoundError) as excinfo:
         await order_repository.pay_reorder_warning(999)
     
@@ -404,7 +379,6 @@ async def test_pay_reorder_warning_not_found(order_repository):
 
 @pytest.mark.asyncio
 async def test_pay_reorder_warning_not_a_reorder(order_repository, product_repository, system_repository):
-    """FR4.5: Test paying for regular order (not a reorder warning) should fail"""
     # Create a product
     product = await product_repository.create_product(
         description="Product",
@@ -431,7 +405,6 @@ async def test_pay_reorder_warning_not_a_reorder(order_repository, product_repos
 
 @pytest.mark.asyncio
 async def test_pay_reorder_warning_already_paid(order_repository, product_repository, system_repository):
-    """FR4.5: Test paying for already paid reorder warning"""
     # Create a product
     product = await product_repository.create_product(
         description="Product",
@@ -461,7 +434,6 @@ async def test_pay_reorder_warning_already_paid(order_repository, product_reposi
 
 @pytest.mark.asyncio
 async def test_pay_reorder_warning_insufficient_balance(order_repository, product_repository, system_repository):
-    """FR4.5: Test paying for reorder warning with insufficient balance"""
     # Create a product
     product = await product_repository.create_product(
         description="Product",

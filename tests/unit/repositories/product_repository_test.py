@@ -1,7 +1,3 @@
-"""
-Unit tests for ProductRepository
-Tests the repository layer in isolation with real database operations
-"""
 import pytest
 import pytest_asyncio
 from init_db import reset, init_db
@@ -13,7 +9,6 @@ from app.models.errors.bad_request import BadRequestError
 
 @pytest_asyncio.fixture(autouse=True)
 async def setup_database():
-    """Reset and initialize database before each test"""
     await reset()
     await init_db()
 
@@ -25,7 +20,6 @@ def product_repository():
 
 @pytest.mark.asyncio
 async def test_create_product_success(product_repository):
-    """Test creating a product successfully"""
     product = await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -46,7 +40,6 @@ async def test_create_product_success(product_repository):
 
 @pytest.mark.asyncio
 async def test_create_product_minimal(product_repository):
-    """Test creating product with minimal fields"""
     product = await product_repository.create_product(
         description="Minimal Product",
         barcode="1111111111111",
@@ -61,7 +54,6 @@ async def test_create_product_minimal(product_repository):
 
 @pytest.mark.asyncio
 async def test_create_product_duplicate_barcode(product_repository):
-    """Test creating product with duplicate barcode raises ConflictError"""
     await product_repository.create_product(
         description="First Product",
         barcode="1234567890123",
@@ -78,7 +70,6 @@ async def test_create_product_duplicate_barcode(product_repository):
 
 @pytest.mark.asyncio
 async def test_get_product_by_id_success(product_repository):
-    """Test retrieving a product by ID"""
     created = await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -92,14 +83,12 @@ async def test_get_product_by_id_success(product_repository):
 
 @pytest.mark.asyncio
 async def test_get_product_by_id_not_found(product_repository):
-    """Test getting non-existent product by ID"""
     with pytest.raises(NotFoundError):
         await product_repository.get_product_by_id(999)
 
 
 @pytest.mark.asyncio
 async def test_get_product_by_barcode_success(product_repository):
-    """Test retrieving a product by barcode"""
     await product_repository.create_product(
         description="Test Product",
         barcode="1234567890123",
@@ -112,21 +101,18 @@ async def test_get_product_by_barcode_success(product_repository):
 
 @pytest.mark.asyncio
 async def test_get_product_by_barcode_not_found(product_repository):
-    """Test getting non-existent product by barcode"""
     with pytest.raises(NotFoundError):
         await product_repository.get_product_by_barcode("9999999999999")
 
 
 @pytest.mark.asyncio
 async def test_get_all_products_empty(product_repository):
-    """Test getting all products when none exist"""
     products = await product_repository.get_all_products()
     assert len(products) == 0
 
 
 @pytest.mark.asyncio
 async def test_get_all_products_success(product_repository):
-    """Test retrieving all products"""
     await product_repository.create_product("Product 1", "1111111111111", 10.0)
     await product_repository.create_product("Product 2", "2222222222222", 20.0)
     await product_repository.create_product("Product 3", "3333333333333", 30.0)
@@ -137,7 +123,6 @@ async def test_get_all_products_success(product_repository):
 
 @pytest.mark.asyncio
 async def test_search_products_by_description_found(product_repository):
-    """Test searching products by description"""
     await product_repository.create_product("Red Widget", "1111111111111", 10.0)
     await product_repository.create_product("Blue Widget", "2222222222222", 20.0)
     await product_repository.create_product("Green Gadget", "3333333333333", 30.0)
@@ -148,7 +133,6 @@ async def test_search_products_by_description_found(product_repository):
 
 @pytest.mark.asyncio
 async def test_search_products_by_description_not_found(product_repository):
-    """Test searching with no results"""
     await product_repository.create_product("Red Widget", "1111111111111", 10.0)
     
     results = await product_repository.search_products_by_description("Nonexistent")
@@ -157,7 +141,6 @@ async def test_search_products_by_description_not_found(product_repository):
 
 @pytest.mark.asyncio
 async def test_search_products_case_insensitive(product_repository):
-    """Test that search is case insensitive"""
     await product_repository.create_product("Test Product", "1111111111111", 10.0)
     
     results = await product_repository.search_products_by_description("test")
@@ -166,7 +149,6 @@ async def test_search_products_case_insensitive(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_product_all_fields(product_repository):
-    """Test updating all product fields"""
     product = await product_repository.create_product(
         description="Original",
         barcode="1111111111111",
@@ -194,7 +176,6 @@ async def test_update_product_all_fields(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_product_partial(product_repository):
-    """Test updating only some fields"""
     product = await product_repository.create_product(
         description="Original",
         barcode="1111111111111",
@@ -212,14 +193,12 @@ async def test_update_product_partial(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_product_not_found(product_repository):
-    """Test updating non-existent product"""
     with pytest.raises(NotFoundError):
         await product_repository.update_product(999, description="Test")
 
 
 @pytest.mark.asyncio
 async def test_update_product_barcode_conflict(product_repository):
-    """Test updating to a barcode that already exists"""
     await product_repository.create_product("Product 1", "1111111111111", 10.0)
     product2 = await product_repository.create_product("Product 2", "2222222222222", 20.0)
     
@@ -232,7 +211,6 @@ async def test_update_product_barcode_conflict(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_product_same_barcode(product_repository):
-    """Test updating product with its own barcode (should succeed)"""
     product = await product_repository.create_product("Product", "1111111111111", 10.0)
     
     # Update with same barcode should work
@@ -248,7 +226,6 @@ async def test_update_product_same_barcode(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_quantity_increase(product_repository):
-    """Test increasing product quantity"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -262,7 +239,6 @@ async def test_update_quantity_increase(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_quantity_decrease(product_repository):
-    """Test decreasing product quantity"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -276,7 +252,6 @@ async def test_update_quantity_decrease(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_quantity_to_zero(product_repository):
-    """Test setting quantity to zero"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -290,7 +265,6 @@ async def test_update_quantity_to_zero(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_quantity_negative_result(product_repository):
-    """Test that quantity cannot go negative"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -304,14 +278,12 @@ async def test_update_quantity_negative_result(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_quantity_not_found(product_repository):
-    """Test updating quantity of non-existent product"""
     with pytest.raises(NotFoundError):
         await product_repository.update_quantity(999, 10)
 
 
 @pytest.mark.asyncio
 async def test_update_position_valid_format(product_repository):
-    """Test updating position with valid format"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -324,7 +296,6 @@ async def test_update_position_valid_format(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_position_various_formats(product_repository):
-    """Test various valid position formats"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -339,7 +310,6 @@ async def test_update_position_various_formats(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_position_invalid_format(product_repository):
-    """Test updating position with invalid format"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -352,7 +322,6 @@ async def test_update_position_invalid_format(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_position_clear(product_repository):
-    """Test clearing position (empty string)"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -366,14 +335,12 @@ async def test_update_position_clear(product_repository):
 
 @pytest.mark.asyncio
 async def test_update_position_not_found(product_repository):
-    """Test updating position of non-existent product"""
     with pytest.raises(NotFoundError):
         await product_repository.update_position(999, "1-A-1")
 
 
 @pytest.mark.asyncio
 async def test_delete_product_success(product_repository):
-    """Test deleting a product"""
     product = await product_repository.create_product(
         description="Test",
         barcode="1111111111111",
@@ -390,14 +357,12 @@ async def test_delete_product_success(product_repository):
 
 @pytest.mark.asyncio
 async def test_delete_product_not_found(product_repository):
-    """Test deleting non-existent product"""
     with pytest.raises(NotFoundError):
         await product_repository.delete_product(999)
 
 
 @pytest.mark.asyncio
 async def test_validate_position_format_internal(product_repository):
-    """Test the internal position validation method"""
     # Valid formats
     assert product_repository._validate_position_format("1-A-1") is True
     assert product_repository._validate_position_format("99-ZZZ-999") is True

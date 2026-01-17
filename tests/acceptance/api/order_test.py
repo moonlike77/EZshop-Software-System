@@ -1,7 +1,3 @@
-"""
-API tests for order routes
-Tests the API layer with authentication and request/response validation
-"""
 import pytest
 import asyncio
 from fastapi.testclient import TestClient
@@ -32,7 +28,6 @@ BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 @pytest.fixture(scope="session", autouse=True)
 def auth_tokens(event_loop, client):
-    """Authenticate users once and return their JWT tokens."""
     
     event_loop.run_until_complete(reset())
     event_loop.run_until_complete(init_db())
@@ -62,7 +57,6 @@ def auth_header(tokens, role: str):
 
 @pytest.fixture(scope="session", autouse=True)
 def test_product(client, auth_tokens):
-    """Create a test product for order tests"""
     product_data = {
         "barcode": "1234567890123",
         "description": "Test Product for Orders",
@@ -408,7 +402,6 @@ def test_delete_order_unauthenticated(client):
 # ---------------------------
 
 def test_payfor_invalid_barcode(client, auth_tokens):
-    """Test payfor with invalid barcode format - rejected by DTO validation"""
     client.post(BASE_URL + "/balance/set?amount=10000.0", headers=auth_header(auth_tokens, "admin"))
     
     invalid_order = {
@@ -421,7 +414,6 @@ def test_payfor_invalid_barcode(client, auth_tokens):
 
 
 def test_record_arrival_product_without_position(client, auth_tokens):
-    """Test recording arrival when product has no position - covers line 135"""
     # Create product without position
     product_data = {
         "description": "No Position Product",
