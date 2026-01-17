@@ -323,3 +323,166 @@ async def test_record_arrival_orphaned_order(order_repository):
     
     assert "Product with id '999' not found" in str(excinfo.value)
 
+
+@pytest.mark.asyncio
+async def test_issue_reorder_warning_success(order_repository, product_repository, system_repository):
+    """FR4.3: Test issuing a reorder warning successfully"""
+    # Create a product first
+    product = await product_repository.create_product(
+        description="Low Stock Product",
+        barcode="1234567890123",
+        price_per_unit=10.0,
+        quantity=5,
+        position="1-A-1"
+    )
+    
+    # Issue reorder warning
+    reorder = await order_repository.issue_reorder_warning(
+        product_id=product.id,
+        quantity=50,
+        price_per_unit=9.5
+    )
+    
+    # Assertions
+    assert reorder.id is not None
+    assert reorder.product_id == product.id
+    assert reorder.quantity == 50
+    assert reorder.price_per_unit == 9.5
+    assert reorder.status == OrderStatus.Issued
+    assert reorder.is_reorder_warning is True
+    assert reorder.issue_date is not None
+
+
+@pytest.mark.asyncio
+async def test_pay_reorder_warning_success(order_repository, product_repository, system_repository):
+    """FR4.5: Test paying for a reorder warning successfully"""
+    # Create a product
+    product = await product_repository.create_product(
+        description="Low Stock Product",
+        barcode="1234567890123",
+        price_per_unit=10.0,
+        quantity=5,
+        position="1-A-1"
+    )
+    
+    # Set sufficient balance
+    await system_repository.set_balance(1000.0)
+    
+    # Issue reorder warning
+    reorder = await order_repository.issue_reorder_warning(
+        product_id=product.id,
+        quantity=50,
+        price_per_unit=9.5
+    )
+    
+    initial_system = await system_repository.get_singleton()
+    initial_balance = initial_system.balance
+    
+    # Pay for reorder warning
+    paid_reorder = await order_repository.pay_reorder_warning(reorder.id)
+    
+    # Assertions
+    assert paid_reorder.id == reorder.id
+    assert paid_reorder.status == OrderStatus.Paid
+    assert paid_reorder.is_reorder_warning is True
+    
+    # Check balance was updated
+    final_system = await system_repository.get_singleton()
+    final_balance = final_system.balance
+    expected_cost = 50 * 9.5
+    assert final_balance == initial_balance - expected_cost
+
+
+@pytest.mark.asyncio
+async def test_pay_reorder_warning_not_found(order_repository):
+    """FR4.5: Test paying for non-existent reorder warning"""
+    with pytest.raises(NotFoundError) as excinfo:
+        await order_repository.pay_reorder_warning(999)
+    
+    assert "Order with id '999' not found" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_pay_reorder_warning_not_a_reorder(order_repository, product_repository, system_repository):
+    """FR4.5: Test paying for regular order (not a reorder warning) should fail"""
+    # Create a product
+    product = await product_repository.create_product(
+        description="Product",
+        barcode="1234567890123",
+        price_per_unit=10.0,
+        quantity=10,
+        position="1-A-1"
+    )
+    
+    # Create regular order (not reorder warning)
+    order = await order_repository.create_order(
+        product_id=product.id,
+        quantity=10,
+        price_per_unit=10.0
+    )
+    
+    # Try to pay as reorder warning - should fail
+    from app.models.errors.bad_request import BadRequestError
+    with pytest.raises(BadRequestError) as excinfo:
+        await order_repository.pay_reorder_warning(order.id)
+    
+    assert "not a reorder warning" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_pay_reorder_warning_already_paid(order_repository, product_repository, system_repository):
+    """FR4.5: Test paying for already paid reorder warning"""
+    # Create a product
+    product = await product_repository.create_product(
+        description="Product",
+        barcode="1234567890123",
+        price_per_unit=10.0,
+        quantity=5,
+        position="1-A-1"
+    )
+    
+    # Set sufficient balance
+    await system_repository.set_balance(1000.0)
+    
+    # Issue and pay reorder warning
+    reorder = await order_repository.issue_reorder_warning(
+        product_id=product.id,
+        quantity=10,
+        price_per_unit=10.0
+    )
+    await order_repository.pay_reorder_warning(reorder.id)
+    
+    # Try to pay again - should fail
+    with pytest.raises(InvalidStateError) as excinfo:
+        await order_repository.pay_reorder_warning(reorder.id)
+    
+    assert "not in ISSUED state" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_pay_reorder_warning_insufficient_balance(order_repository, product_repository, system_repository):
+    """FR4.5: Test paying for reorder warning with insufficient balance"""
+    # Create a product
+    product = await product_repository.create_product(
+        description="Product",
+        barcode="1234567890123",
+        price_per_unit=10.0,
+        quantity=5,
+        position="1-A-1"
+    )
+    
+    # Set low balance
+    await system_repository.set_balance(10.0)
+    
+    # Issue reorder warning
+    reorder = await order_repository.issue_reorder_warning(
+        product_id=product.id,
+        quantity=100,
+        price_per_unit=10.0
+    )
+    
+    # Try to pay - should fail due to insufficient balance
+    with pytest.raises(AppError) as excinfo:
+        await order_repository.pay_reorder_warning(reorder.id)
+    
+    assert "Insufficient balance" in str(excinfo.value)

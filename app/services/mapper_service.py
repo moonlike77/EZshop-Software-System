@@ -94,7 +94,8 @@ def orderdao_to_responsedto(order_dao: OrderDAO, product_barcode: str) -> OrderR
         quantity=order_dao.quantity,
         price_per_unit=order_dao.price_per_unit,
         status=str(status_val).upper(),
-        issue_date=order_dao.issue_date
+        issue_date=order_dao.issue_date,
+        is_reorder_warning=order_dao.is_reorder_warning
     )
 
 def productdao_to_responsedto(product_dao: ProductDAO) -> ProductResponseDTO:

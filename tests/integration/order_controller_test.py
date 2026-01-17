@@ -5,7 +5,7 @@ Tests the controller layer with mocked repository
 import pytest
 from unittest.mock import MagicMock, AsyncMock, patch
 from app.controllers.order_controller import OrderController
-from app.models.DTO.order_dto import OrderCreateDTO, OrderPayForDTO, OrderResponseDTO
+from app.models.DTO.order_dto import OrderCreateDTO, OrderPayForDTO, OrderResponseDTO, ReorderWarningCreateDTO
 from app.models.DAO.order_dao import OrderDAO, OrderStatus
 from app.models.DAO.product_dao import ProductDAO
 from datetime import datetime, timezone
@@ -241,3 +241,96 @@ async def test_delete_order():
         
         mock_repo.delete_order.assert_called_once_with(1)
         assert result is True
+
+
+@pytest.mark.asyncio
+async def test_issue_reorder_warning():
+    """FR4.3: Test issuing a reorder warning through controller"""
+    mock_order_repo = MagicMock()
+    mock_product_repo = MagicMock()
+    
+    mock_order_repo.issue_reorder_warning = AsyncMock()
+    mock_product_repo.get_product_by_barcode = AsyncMock()
+    
+    # Setup product mock
+    product = MagicMock(spec=ProductDAO)
+    product.id = 1
+    product.barcode = "1234567890123"
+    mock_product_repo.get_product_by_barcode.return_value = product
+    
+    # Setup reorder warning mock
+    reorder = MagicMock(spec=OrderDAO)
+    reorder.id = 1
+    reorder.product_id = 1
+    reorder.quantity = 50
+    reorder.price_per_unit = 9.5
+    reorder.status = OrderStatus.Issued
+    reorder.is_reorder_warning = True
+    reorder.issue_date = datetime.now(timezone.utc)
+    reorder.product = product
+    mock_order_repo.issue_reorder_warning.return_value = reorder
+    
+    with patch('app.controllers.order_controller.OrderRepository', return_value=mock_order_repo), \
+         patch('app.repositories.product_repository.ProductRepository', return_value=mock_product_repo):
+        
+        controller = OrderController()
+        input_dto = ReorderWarningCreateDTO(
+            product_barcode="1234567890123",
+            quantity=50,
+            price_per_unit=9.5
+        )
+        
+        result = await controller.issue_reorder_warning(input_dto)
+        
+        mock_product_repo.get_product_by_barcode.assert_called_once_with("1234567890123")
+        mock_order_repo.issue_reorder_warning.assert_called_once_with(
+            product_id=1,
+            quantity=50,
+            price_per_unit=9.5
+        )
+        
+        assert isinstance(result, OrderResponseDTO)
+        assert result.id == 1
+        assert result.product_barcode == "1234567890123"
+        assert result.quantity == 50
+        assert result.price_per_unit == 9.5
+        assert result.status == "ISSUED"
+        assert result.is_reorder_warning is True
+
+
+@pytest.mark.asyncio
+async def test_pay_reorder_warning():
+    """FR4.5: Test paying for a reorder warning through controller"""
+    mock_repo = MagicMock()
+    mock_repo.pay_reorder_warning = AsyncMock()
+    
+    # Setup product mock
+    product = MagicMock(spec=ProductDAO)
+    product.id = 1
+    product.barcode = "1234567890123"
+    
+    # Setup paid reorder warning mock
+    reorder = MagicMock(spec=OrderDAO)
+    reorder.id = 1
+    reorder.product_id = 1
+    reorder.quantity = 50
+    reorder.price_per_unit = 9.5
+    reorder.status = OrderStatus.Paid
+    reorder.is_reorder_warning = True
+    reorder.issue_date = datetime.now(timezone.utc)
+    reorder.product = product
+    mock_repo.pay_reorder_warning.return_value = reorder
+    
+    with patch('app.controllers.order_controller.OrderRepository', return_value=mock_repo):
+        controller = OrderController()
+        result = await controller.pay_reorder_warning(1)
+        
+        mock_repo.pay_reorder_warning.assert_called_once_with(1)
+        
+        assert isinstance(result, OrderResponseDTO)
+        assert result.id == 1
+        assert result.product_barcode == "1234567890123"
+        assert result.quantity == 50
+        assert result.price_per_unit == 9.5
+        assert result.status == "PAID"
+        assert result.is_reorder_warning is True

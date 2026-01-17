@@ -151,3 +151,63 @@ class OrderRepository:
             await session.delete(order)
             await session.commit()
             return True
+
+    async def issue_reorder_warning(
+        self,
+        product_id: int,
+        quantity: int,
+        price_per_unit: float
+    ) -> OrderDAO:
+        """FR4.3: Issue a reorder warning for a product type (creates an order marked as reorder warning)"""
+        logger.info(f"Issuing reorder warning for product {product_id}")
+        async with await self._get_session() as session:
+            order = OrderDAO(
+                product_id=product_id,
+                quantity=quantity,
+                price_per_unit=price_per_unit,
+                status=OrderStatus.Issued,
+                issue_date=datetime.now(timezone.utc),
+                is_reorder_warning=True
+            )
+            session.add(order)
+            await session.commit()
+            await session.refresh(order)
+            logger.info(f"Reorder warning {order.id} issued successfully")
+            return order
+
+    async def pay_reorder_warning(self, order_id: int) -> OrderDAO:
+        """FR4.5: Pay an issued reorder warning, change status to PAID, update balance"""
+        logger.info(f"Paying for reorder warning {order_id}")
+        async with await self._get_session() as session:
+            order = await session.get(OrderDAO, order_id)
+            find_or_throw_not_found(
+                [order] if order else [],
+                lambda _: True,
+                f"Order with id '{order_id}' not found"
+            )
+
+            if not order.is_reorder_warning:
+                raise BadRequestError(
+                    f"Order {order_id} is not a reorder warning"
+                )
+
+            if order.status != OrderStatus.Issued:
+                raise InvalidStateError(
+                    f"Order {order_id} is not in ISSUED state (current: {order.status})"
+                )
+
+            order_cost = order.quantity * order.price_per_unit
+            system = await self._get_system_info(session)
+            if system.balance < order_cost:
+                raise AppError(
+                    f"Insufficient balance. Required: {order_cost}, Available: {system.balance}",
+                    421,
+                )
+
+            order.status = OrderStatus.Paid
+            system.balance -= order_cost
+
+            await session.commit()
+            await session.refresh(order)
+            logger.info(f"Reorder warning {order_id} paid successfully. Balance updated: -{order_cost}")
+            return order

@@ -1,7 +1,7 @@
 from typing import List
 from app.repositories.order_repository import OrderRepository
 from app.models.DAO.product_dao import ProductDAO
-from app.models.DTO.order_dto import OrderCreateDTO, OrderPayForDTO, OrderResponseDTO
+from app.models.DTO.order_dto import OrderCreateDTO, OrderPayForDTO, OrderResponseDTO, ReorderWarningCreateDTO
 from app.services.mapper_service import orderdao_to_responsedto
 from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.bad_request import BadRequestError
@@ -79,3 +79,27 @@ class OrderController:
     async def delete_order(self, order_id: int) -> bool:
         """Delete an order"""
         return await self.repository.delete_order(order_id)
+
+    async def issue_reorder_warning(self, reorder_dto: ReorderWarningCreateDTO) -> OrderResponseDTO:
+        """FR4.3: Issue a reorder warning for a product type"""
+        from app.repositories.product_repository import ProductRepository
+        product_repo = ProductRepository()
+        
+        # Get product by barcode
+        product = await product_repo.get_product_by_barcode(reorder_dto.product_barcode)
+        
+        # Issue reorder warning
+        order_dao = await self.repository.issue_reorder_warning(
+            product_id=product.id,
+            quantity=reorder_dto.quantity,
+            price_per_unit=reorder_dto.price_per_unit
+        )
+        
+        # Convert to DTO
+        return orderdao_to_responsedto(order_dao, product.barcode)
+
+    async def pay_reorder_warning(self, order_id: int) -> OrderResponseDTO:
+        """FR4.5: Pay for an issued reorder warning"""
+        order_dao = await self.repository.pay_reorder_warning(order_id)
+        product = order_dao.product
+        return orderdao_to_responsedto(order_dao, product.barcode)
