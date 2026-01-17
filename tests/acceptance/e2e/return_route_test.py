@@ -45,7 +45,6 @@ def auth_tokens(client):
 
 @pytest.fixture
 async def setup_sale_for_return():
-    """Prepara una vendita reale nel DB prima del test della route."""
     async with AsyncSessionLocal() as session:
 
         p1 = ProductDAO(id=1, description="Coffe", barcode="000000000001",
