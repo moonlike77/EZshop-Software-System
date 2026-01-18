@@ -191,3 +191,20 @@ async def test_product_bottom_up_update_quantity_cannot_go_negative():
 
     with pytest.raises(BadRequestError):
         await controller.update_quantity(created.id, -2)
+
+
+@pytest.mark.asyncio
+async def test_product_put_update_rejects_position_field():
+    controller = ProductController()
+
+    created = await controller.create_product(
+        ProductCreateDTO(
+            barcode="1234567890123",
+            description="P",
+            price_per_unit=10.0,
+            quantity=0,
+        )
+    )
+
+    with pytest.raises(BadRequestError):
+        await controller.update_product(created.id, ProductUpdateDTO(position="1-A-1"))
