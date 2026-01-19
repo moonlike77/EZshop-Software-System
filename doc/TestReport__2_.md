@@ -15,13 +15,18 @@
 
 # Dependency graph
 
-|  |
-| :---- |
+    <report the here the dependency graph of EzShop>
+
 
 # Integration approach
 
-| The integration sequence adopted was a bottom up: step1: all the repositories step2: all the controllers \+ repositories step3: all the routes \+ controllers \+ repositories |
-| :---- |
+    The integration sequence adopted was a bottom up:
+
+    step1: all the repositories
+
+    step2: all the controllers + repositories
+
+    step3: all the routes + controllers + repositories
 
 # Tests
 
