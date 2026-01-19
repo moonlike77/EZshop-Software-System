@@ -15,7 +15,7 @@
 
 # Dependency graph
 
-    <report the here the dependency graph of EzShop>
+![Dependency Graph](Images/photo_2026-01-16_15-25-06.jpg)
 
 
 # Integration approach
@@ -453,8 +453,8 @@
 | Sc 1-2 | **product_controller_test.py:**<br>- test_update_position<br>**product_repository_test.py:**<br>- test_update_position_valid_format<br>- test_update_position_invalid_forma<br>- test_update_position_clear |
 | Sc 1-3 | **product_route_test.py:**<br>- test_update_product_success<br>**product_repository_test.py:**<br>- test_update_product_all_fields |
 | Sc 3-1 | **order_route_test.py:**<br>- test_create_order_success_as_admin<br>- test_create_order_success_as_manager<br>- test_create_order_invalid_product<br>- test_create_order_missing_fields<br>- test_create_order_invalid_quantity<br>**order_repository_test.py:**<br>- test_create_order_success<br>**order_controller_test.py:**<br>- test_create_order |
-| Scenario 3-2 | **order_route_test.py:**<br>- test_pay_order_success<br>- test_pay_order_wrong_status<br>- test_pay_order_not_found<br>- test_payfor_order_success_as_admin<br>- test_payfor_order_success_as_manager<br>**order_repository_test.py:**<br>- test_pay_order_success<br>- test_pay_order_wrong_status<br>- test_pay_order_insufficient_balance<br>**order_controller_test.py:**<br>- test_pay_order<br>- test_create_and_pay_order |
-| Scenario 3-3 | **order_route_test.py:**<br>- test_record_arrival_success<br>- test_record_arrival_wrong_status<br>- test_record_arrival_not_found<br>- test_record_arrival_product_without_position<br>**order_repository_test.py:**<br>- test_record_order_arrival_success<br>- test_record_arrival_wrong_status<br>- test_record_arrival_no_position<br>- test_record_arrival_orphaned_orde<br>**order_controller_test.py:**<br>- test_record_order_arrival |
+| Sc 3-2 | **order_route_test.py:**<br>- test_pay_order_success<br>- test_pay_order_wrong_status<br>- test_pay_order_not_found<br>- test_payfor_order_success_as_admin<br>- test_payfor_order_success_as_manager<br>**order_repository_test.py:**<br>- test_pay_order_success<br>- test_pay_order_wrong_status<br>- test_pay_order_insufficient_balance<br>**order_controller_test.py:**<br>- test_pay_order<br>- test_create_and_pay_order |
+| Sc 3-3 | **order_route_test.py:**<br>- test_record_arrival_success<br>- test_record_arrival_wrong_status<br>- test_record_arrival_not_found<br>- test_record_arrival_product_without_position<br>**order_repository_test.py:**<br>- test_record_order_arrival_success<br>- test_record_arrival_wrong_status<br>- test_record_arrival_no_position<br>- test_record_arrival_orphaned_orde<br>**order_controller_test.py:**<br>- test_record_order_arrival |
 | Sc 4-1 | **customer_test.py:**<br>- test_create_customer_success_as_admin<br>- test_create_customer_success_as_manager<br>- test_create_customer_success_as_cashier<br>**customer_route_test.py:**<br>- test_create_customer_success<br>**customer_controller_test.py:**<br>- test_create_customer_without_card<br>**customer_repository_test.py:**<br>- test_create_customer_success |
 | Sc 4-2 | **customer_test.py:**<br>- test_create_loyalty_card_success_as_admin<br>- test_create_loyalty_card_success_as_manager<br>- test_create_loyalty_card_success_as_cashier<br>- test_attach_loyalty_card_to_customer_success<br>**customer_route_test.py:**<br>- test_create_loyalty_card_success<br>- test_attach_loyalty_card_to_customer_success<br>**customer_controller_test.py:**<br>- test_create_loyalty_card<br>- test_attach_loyalty_card_to_customer<br>**customer_repository_test.py:**<br>- test_create_loyalty_card_success |
 | Sc 4-3 | **customer_test.py:**<br>- test_get_customer_success<br>- test_update_customer_deletion_card_success<br>**customer_route_test.py:**<br>- test_get_customer_success<br>**customer_controller_test.py:**<br>- test_get_customer<br>**customer_repository_test.py:**<br>- test_get_customer_success<br>- test_update_customer_detach_card_success |
@@ -473,3 +473,7 @@
 ## Coverage white box
 
 Report here the screenshot of coverage values obtained with PyTest  
+
+![Coverage_1](Images/Screenshot_2026-01-19_214221.png)
+![Coverage_2](Images/Screenshot_2026-01-19_214354.png)
+![Coverage_3](Images/Screenshot_2026-01-19_214507.png)
