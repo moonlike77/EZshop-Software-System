@@ -1,493 +1,381 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 from app.controllers.customer_controller import CustomerController
 from app.controllers.loyalty_card_controller import LoyaltyCardController
+from app.models.errors.notfound_error import NotFoundError
+from app.models.errors.conflict_error import ConflictError
 from app.models.DTO.customer_dto import CustomerDTO
 from app.models.DTO.loyalty_card_dto import LoyaltyCardDTO
+from app.database.database import AsyncSessionLocal, init_db, reset_db
 
 @pytest.mark.asyncio
 async def test_create_customer_without_card():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.create_customer = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=MagicMock()):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        controller.repo._session = session
 
         input_dto = CustomerDTO(name="Mario Rossi")
 
-        cust = MagicMock()
-        cust.id = 1
-        cust.name = "Mario Rossi"
-        cust.card = None
-
-        mock_repo_inst.create_customer.return_value = cust
         result = await controller.create_customer(input_dto)
-        mock_repo_inst.create_customer.assert_called_once_with("Mario Rossi")
 
         assert isinstance(result, CustomerDTO)
         assert result.name == "Mario Rossi"
+        assert result.id is not None
+
+        catch = await controller.repo.get_customer(result.id)
+
+        assert catch is not None
+        assert catch.id == result.id
+        assert catch.name == result.name
+
+@pytest.mark.asyncio
+async def test_create_loyalty_card():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        
+        controller = LoyaltyCardController()
+        controller.repo._session = session
+
+        result = await controller.create_loyalty_card()
+
+        assert isinstance(result, LoyaltyCardDTO)
+        assert result.card_id == "0000000001"
+        assert result.points == 0
+
+        catch = await controller.repo.get_loyalty_card(result.card_id)
+
+        assert catch is not None
+        assert catch.card_id == 1
 
 @pytest.mark.asyncio
 async def test_create_customer_with_card():
-    mock_repo_inst = MagicMock()
-    mock_card_repo_inst = MagicMock()
-    mock_repo_inst.create_customer = AsyncMock()
-    mock_card_repo_inst.get_loyalty_card = AsyncMock()
-    mock_repo_inst.update_customer_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        card_controller = LoyaltyCardController()
+        card_controller.repo._session = session
+        controller.repo._session = session
+        controller.card_repo._session = session
+
+        await card_controller.create_loyalty_card()
 
         input_dto = CustomerDTO(name="Mario Rossi", card=LoyaltyCardDTO(card_id="0000000001", points=0))
 
-        card = MagicMock()
-        card.card_id = 1
-        card.points = 0
-
-        mock_card_repo_inst.get_loyalty_card.return_value = card
-
-        cust = MagicMock()
-        cust.id = 1
-        cust.name = "Mario Rossi"
-        cust.card = None
-
-        mock_repo_inst.create_customer.return_value = cust
-
-        cust.card = card
-
-        mock_repo_inst.update_customer_card.return_value = cust
         result = await controller.create_customer(input_dto)
-        mock_repo_inst.create_customer.assert_called_once()
-        mock_repo_inst.update_customer_card.assert_called_once()
 
         assert isinstance(result, CustomerDTO)
         assert result.name == "Mario Rossi"
         assert result.card.card_id == "0000000001"
 
 @pytest.mark.asyncio
-async def test_create_loyalty_card():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.create_loyalty_card = AsyncMock()
-
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
-        
-        controller = LoyaltyCardController()
-
-        card = MagicMock()
-        card.card_id = 1
-        card.points = 0
-
-        mock_repo_inst.create_loyalty_card.return_value = card
-        result = await controller.create_loyalty_card()
-        mock_repo_inst.create_loyalty_card.assert_called_once()
-
-        assert isinstance(result, LoyaltyCardDTO)
-        assert result.card_id == "0000000001"
-
-@pytest.mark.asyncio
 async def test_get_customer():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.get_customer = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=MagicMock()):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        controller.repo._session = session
 
-        cust = MagicMock()
-        cust.id = 1
-        cust.name = "Mario Rossi"
-        cust.card = None
+        input_dto = CustomerDTO(name="Mario Rossi")
 
-        mock_repo_inst.get_customer.return_value = cust
+        await controller.create_customer(input_dto)
+
         result = await controller.get_customer(1)
-        mock_repo_inst.get_customer.assert_called_once_with(1)
 
         assert result.name == "Mario Rossi"
 
 @pytest.mark.asyncio
 async def test_get_loyalty_card():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.get_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = LoyaltyCardController()
+        controller.repo._session = session
 
-        card = MagicMock()
-        card.card_id = 1
-        card.points = 0
+        await controller.create_loyalty_card()
 
-        mock_repo_inst.get_loyalty_card.return_value = card
         result = await controller.get_loyalty_card(1)
-        mock_repo_inst.get_loyalty_card.assert_called_once_with(1)
 
         assert result.card_id == "0000000001"
 
 @pytest.mark.asyncio
 async def test_get_loyalty_card_not_found():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.get_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = LoyaltyCardController()
+        controller.repo._session = session
 
-        mock_repo_inst.get_loyalty_card.return_value = None
-        result = await controller.get_loyalty_card(1)
-        mock_repo_inst.get_loyalty_card.assert_called_once_with(1)
-
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await controller.get_loyalty_card(1)
 
 @pytest.mark.asyncio
 async def test_get_customer_not_found():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.get_customer = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=MagicMock()):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        controller.repo._session = session
 
-        mock_repo_inst.get_customer.return_value = None
-        result = await controller.get_customer(1)
-        mock_repo_inst.get_customer.assert_called_once_with(1)
-
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await controller.get_customer(1)
 
 @pytest.mark.asyncio
 async def test_list_customers():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.list_customers = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=MagicMock()):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        controller.repo._session = session
 
-        cust1 = MagicMock()
-        cust1.id = 1
-        cust1.name = "Mario Rossi"
-        cust1.card = None
+        input1_dto = CustomerDTO(name="Mario Rossi")
+        input2_dto = CustomerDTO(name="Luigi Bianchi")
 
-        cust2 = MagicMock()
-        cust2.id = 2
-        cust2.name = "Luca Bianchi"
-        cust2.card = None
+        await controller.create_customer(input1_dto)
+        await controller.create_customer(input2_dto)
 
-        expected_customers = [cust1, cust2]
-
-        mock_repo_inst.list_customers.return_value = expected_customers
         result = await controller.list_customers()
-        mock_repo_inst.list_customers.assert_called_once()
 
-        assert result[0].name == expected_customers[0].name
-        assert result[1].name == expected_customers[1].name
+        assert result[0].name == "Mario Rossi"
+        assert result[1].name == "Luigi Bianchi"
 
 @pytest.mark.asyncio
 async def test_list_customers_empty():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.list_customers = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_repo_inst), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=MagicMock()):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        controller.repo._session = session
 
-        expected_customers = []
-
-        mock_repo_inst.list_customers.return_value = expected_customers
         result = await controller.list_customers()
-        mock_repo_inst.list_customers.assert_called_once()
 
         assert len(result) == 0
 
 @pytest.mark.asyncio
 async def test_update_loyalty_card_points():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.update_loyalty_card_points = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = LoyaltyCardController()
+        controller.repo._session = session
 
-        card = MagicMock()
-        card.card_id = 1
-        card.points = 30
+        await controller.create_loyalty_card()
 
-        mock_repo_inst.update_loyalty_card_points.return_value = card
         result = await controller.update_loyalty_card_points(1, 30)
-        mock_repo_inst.update_loyalty_card_points.assert_called_once_with(1, 30)
 
         assert result.points == 30
 
 @pytest.mark.asyncio
 async def test_update_loyalty_card_points_not_found():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.update_loyalty_card_points = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = LoyaltyCardController()
+        controller.repo._session = session
 
-        mock_repo_inst.update_loyalty_card_points.return_value = None
-        result = await controller.update_loyalty_card_points(1, 30)
-        mock_repo_inst.update_loyalty_card_points.assert_called_once_with(1, 30)
-
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await controller.update_loyalty_card_points(1, 30)
 
 @pytest.mark.asyncio
-async def test_update_customer_name_and_card():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
+async def test_update_customer_name_and_card_fixed():
+    await reset_db()
+    await init_db()
+
+    controller = CustomerController()
+    card_controller = LoyaltyCardController()
+
+    await card_controller.create_loyalty_card()
+    await card_controller.create_loyalty_card()
+
+    input_dto = CustomerDTO(name="Mario Rossi", card=LoyaltyCardDTO(card_id="0000000001", points=0))
+    await controller.create_customer(input_dto)
+
+    new_input_dto = CustomerDTO(name="Mario Bianchi", card=LoyaltyCardDTO(card_id="0000000002", points=0))
     
-    mock_cust_repo.get_customer = AsyncMock()
-    mock_cust_repo.update_customer = AsyncMock()
-    mock_card_repo.get_loyalty_card = AsyncMock()
+    result = await controller.update_customer(1, new_input_dto)
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    assert result.name == "Mario Bianchi"
+    assert result.card.card_id == "0000000002"
+
+    async with AsyncSessionLocal() as session:
+        from app.models.DAO.customer_dao import CustomerDAO
+        from sqlalchemy.orm import selectinload
+        from sqlalchemy import select
+
+        stmt = (select(CustomerDAO)
+                .filter(CustomerDAO.id == 1)
+                .options(selectinload(CustomerDAO.card)))
         
-        controller = CustomerController()
-
-        old_card = MagicMock()
-        old_card.card_id = 1
-        old_card.points = 0
+        db_res = await session.execute(stmt)
+        db_customer = db_res.scalar_one_or_none()
         
-        old_cust = MagicMock()
-        old_cust.id = 1
-        old_cust.name = "Mario Rossi"
-        old_cust.card = old_card
-        mock_cust_repo.get_customer.return_value = old_cust
-
-        new_card = MagicMock()
-        new_card.card_id = 2
-        new_card.points = 0
-        mock_card_repo.get_loyalty_card.return_value = new_card
-
-        new_cust = MagicMock()
-        new_cust.id = 1
-        new_cust.name = "Mario Bianchi"
-        new_cust.card = new_card
-        mock_cust_repo.update_customer.return_value = new_cust
-
-        input_dto = CustomerDTO(name="Mario Bianchi", card=LoyaltyCardDTO(card_id="0000000002", points=0))
-        result = await controller.update_customer(1, input_dto)
-        mock_cust_repo.get_customer.assert_called_once_with(1)
-        mock_card_repo.get_loyalty_card.assert_called_once_with(2)
-        mock_cust_repo.update_customer.assert_called_with(1, "Mario Bianchi", 2)
-
-        assert result.name == "Mario Bianchi"
-        assert result.card.card_id == "0000000002"
+        assert db_customer.name == "Mario Bianchi"
+        assert db_customer.card.card_id == 2
 
 @pytest.mark.asyncio
 async def test_update_customer_name_and_card_customer_not_found():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
-    
-    mock_cust_repo.get_customer = AsyncMock()
-    mock_cust_repo.update_customer = AsyncMock()
-    mock_card_repo.get_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        card_controller = LoyaltyCardController()
+        card_controller.repo._session = session
+        controller.repo._session = session
+        controller.card_repo._session = session
 
-        old_card = MagicMock()
-        old_card.card_id = 1
-        old_card.points = 0
-        
-        old_cust = MagicMock()
-        old_cust.id = 1
-        old_cust.name = "Mario Rossi"
-        old_cust.card = old_card
-        mock_cust_repo.get_customer.return_value = old_cust
-
-        new_card = MagicMock()
-        new_card.card_id = 2
-        new_card.points = 0
-        mock_card_repo.get_loyalty_card.return_value = new_card
-
-        new_cust = MagicMock()
-        new_cust.id = 1
-        new_cust.name = "Mario Bianchi"
-        new_cust.card = new_card
-        mock_cust_repo.update_customer.return_value = None
+        await card_controller.create_loyalty_card()
+        await card_controller.create_loyalty_card()
 
         input_dto = CustomerDTO(name="Mario Bianchi", card=LoyaltyCardDTO(card_id="0000000002", points=0))
-        result = await controller.update_customer(999, input_dto)
-        mock_cust_repo.get_customer.assert_called_once_with(999)
-        mock_card_repo.get_loyalty_card.assert_called_once_with(2)
-        mock_cust_repo.update_customer.assert_called_with(999, "Mario Bianchi", 2)
-
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await controller.update_customer(999, input_dto)
 
 @pytest.mark.asyncio
 async def test_update_customer_delete_card():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
-    
-    mock_cust_repo.get_customer = AsyncMock()
-    mock_cust_repo.update_customer = AsyncMock()
-    mock_card_repo.delete_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        card_controller = LoyaltyCardController()
+        card_controller.repo._session = session
+        controller.repo._session = session
+        controller.card_repo._session = session
 
-        old_card = MagicMock()
-        old_card.card_id = 1
-        old_card.points = 0
-        
-        old_cust = MagicMock()
-        old_cust.id = 1
-        old_cust.name = "Mario Rossi"
-        old_cust.card = old_card
-        mock_cust_repo.get_customer.return_value = old_cust
+        await card_controller.create_loyalty_card()
 
-        new_cust = MagicMock()
-        new_cust.id = 1
-        new_cust.name = "Mario Rossi"
-        new_cust.card = None
-        mock_cust_repo.update_customer.return_value = new_cust
+        input_dto = CustomerDTO(name="Mario Rossi", card=LoyaltyCardDTO(card_id="0000000001", points=0))
+
+        await controller.create_customer(input_dto)
 
         input_dto = CustomerDTO(name="", card=None)
         result = await controller.update_customer(1, input_dto)
-        mock_cust_repo.get_customer.assert_called_once_with(1)
-        mock_card_repo.delete_loyalty_card.assert_called_once_with(1)
-        mock_cust_repo.update_customer.assert_called_with(1, "", None)
 
         assert result.name == "Mario Rossi"
         assert result.card is None
 
 @pytest.mark.asyncio
 async def test_attach_loyalty_card_to_customer():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
-    
-    mock_cust_repo.update_customer_card = AsyncMock()
-    mock_card_repo.get_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        card_controller = LoyaltyCardController()
+        card_controller.repo._session = session
+        controller.repo._session = session
+        controller.card_repo._session = session
 
-        card = MagicMock()
-        card.card_id = 1
-        card.points = 0
-        mock_card_repo.get_loyalty_card.return_value = card
+        await card_controller.create_loyalty_card()
 
-        cust = MagicMock()
-        cust.id = 1
-        cust.name = "Mario Rossi"
-        cust.card = card
-        mock_cust_repo.update_customer_card.return_value = cust
+        input_dto = CustomerDTO(name="Mario Rossi", card=None)
+
+        await controller.create_customer(input_dto)
 
         result = await controller.attach_loyalty_card_to_customer(1, "0000000001")
-        mock_card_repo.get_loyalty_card.assert_called_once_with(1)
-        mock_cust_repo.update_customer_card.assert_called_once_with(1, 1)
 
         assert result.card.card_id == "0000000001"
 
 @pytest.mark.asyncio
 async def test_attach_loyalty_card_to_customer_customer_not_found():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
-    
-    mock_cust_repo.update_customer_card = AsyncMock()
-    mock_card_repo.get_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        card_controller = LoyaltyCardController()
+        card_controller.repo._session = session
+        controller.repo._session = session
+        controller.card_repo._session = session
 
-        card = MagicMock()
-        card.card_id = 1
-        card.points = 0
-        mock_card_repo.get_loyalty_card.return_value = card
+        await card_controller.create_loyalty_card()
 
-        cust = MagicMock()
-        cust.id = 1
-        cust.name = "Mario Rossi"
-        cust.card = card
-        mock_cust_repo.update_customer_card.return_value = None
-
-        result = await controller.attach_loyalty_card_to_customer(1, "0000000001")
-        mock_card_repo.get_loyalty_card.assert_called_once_with(1)
-        mock_cust_repo.update_customer_card.assert_called_once_with(1, 1)
-
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await controller.attach_loyalty_card_to_customer(1, "0000000001")
 
 @pytest.mark.asyncio
 async def test_delete_customer():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
+    await reset_db()
+    await init_db()
 
-    mock_cust_repo.delete_customer = AsyncMock()
-
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
+        controller.repo._session = session
 
-        mock_cust_repo.delete_customer.return_value = True
+        input_dto = CustomerDTO(name="Mario Rossi")
+
+        await controller.create_customer(input_dto)
+
         result = await controller.delete_customer(1)
-        mock_cust_repo.delete_customer.assert_called_once_with(1)
 
         assert result == True
 
 @pytest.mark.asyncio
 async def test_delete_customer_not_found():
-    mock_cust_repo = MagicMock()
-    mock_card_repo = MagicMock()
+    await reset_db()
+    await init_db()
 
-    mock_cust_repo.delete_customer = AsyncMock()
-
-    with patch('app.controllers.customer_controller.CustomerRepository', return_value=mock_cust_repo), \
-         patch('app.controllers.customer_controller.LoyaltyCardRepository', return_value=mock_card_repo):
+    async with AsyncSessionLocal() as session:
         
         controller = CustomerController()
-
-        mock_cust_repo.delete_customer.return_value = None
-        result = await controller.delete_customer(1)
-        mock_cust_repo.delete_customer.assert_called_once_with(1)
-
-        assert result is None
+        controller.repo._session = session
+        with pytest.raises(NotFoundError):
+            await controller.delete_customer(1)
 
 @pytest.mark.asyncio
 async def test_delete_loyalty_card():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.delete_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = LoyaltyCardController()
+        controller.repo._session = session
 
-        mock_repo_inst.delete_loyalty_card.return_value = True
+        await controller.create_loyalty_card()
+
         result = await controller.delete_loyalty_card(1)
-        mock_repo_inst.delete_loyalty_card.assert_called_once_with(1)
 
         assert result == True
 
 @pytest.mark.asyncio
 async def test_delete_loyalty_card_not_found():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.delete_loyalty_card = AsyncMock()
+    await reset_db()
+    await init_db()
 
-    with patch('app.controllers.loyalty_card_controller.LoyaltyCardRepository', return_value=mock_repo_inst):
+    async with AsyncSessionLocal() as session:
         
         controller = LoyaltyCardController()
+        controller.repo._session = session
 
-        mock_repo_inst.delete_loyalty_card.return_value = None
-        result = await controller.delete_loyalty_card(1)
-        mock_repo_inst.delete_loyalty_card.assert_called_once_with(1)
-
-        assert result is None
+        with pytest.raises(NotFoundError):
+            await controller.delete_loyalty_card(1)

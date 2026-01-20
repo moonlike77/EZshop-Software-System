@@ -65,9 +65,9 @@ async def get_customer(customer_id: int):
       - NotFoundError: when the customer does not exist
     - Status code: 200 OK
     """
+    if customer_id < 1:
+        raise BadRequestError("Invalid id")
     customer = await controller.get_customer(customer_id)
-    if not customer:
-        raise NotFoundError("customer not found")
     return customer
 
 
@@ -87,9 +87,11 @@ async def update_customer(customer_id: int, customer: CustomerDTO):
       - NotFoundError: when the customer to update does not exist
     - Status code: 201 Created
     """
+    if customer_id < 1:
+        raise BadRequestError("Invalid id")
+    if customer.name is None or customer.name == "":
+        raise BadRequestError("Invalid payload")
     updated = await controller.update_customer(customer_id, customer)
-    if not updated:
-        raise NotFoundError("customer not found")
     return updated
 
 
@@ -108,9 +110,7 @@ async def delete_customer(customer_id: int):
       - NotFoundError: when the customer to delete does not exist
     - Status code: 204 No Content
     """
-    success = await controller.delete_customer(customer_id)
-    if not success:
-        raise NotFoundError("customer not found")
+    await controller.delete_customer(customer_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.post("/cards", 
@@ -130,7 +130,7 @@ async def create_loyality_card():
 
 @router.patch("/{customer_id}/attach-card/{card_id}",
               response_model=CustomerDTO,
-              status_code=status.HTTP_200_OK,
+              status_code=status.HTTP_201_CREATED,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))]
               )
 async def attach_card(customer_id: int, card_id: str):
@@ -146,11 +146,9 @@ async def attach_card(customer_id: int, card_id: str):
     - Status code: 200 OK
     """
     attached =  await controller.attach_loyalty_card_to_customer(customer_id, card_id)
-    if not attached:
-        raise ConflictError("Card already attached")
     return attached
 
-@router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_200_OK,
+@router.patch("/cards/{card_id}", response_model=LoyaltyCardDTO, status_code=status.HTTP_201_CREATED,
               dependencies=[Depends(authenticate_user([UserType.Administrator, UserType.Cashier, UserType.ShopManager]))])
 async def update_points(card_id: int, points: int = Query(...)):
     """

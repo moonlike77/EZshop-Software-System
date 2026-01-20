@@ -1,7 +1,3 @@
-"""
-E2E tests for order routes
-Tests complete order workflows from creation to completion
-"""
 import pytest
 from fastapi.testclient import TestClient
 from main import app
@@ -24,7 +20,6 @@ def event_loop():
 
 @pytest.fixture(scope="module")
 def auth_token(client, event_loop):
-    """Get authentication token for manager user"""
     # Reset database
     event_loop.run_until_complete(reset())
     event_loop.run_until_complete(init_db())
@@ -40,7 +35,6 @@ def auth_token(client, event_loop):
 
 @pytest.fixture(scope="module")
 def reset_db(event_loop):
-    """Reset database before each test module"""
     event_loop.run_until_complete(reset())
     event_loop.run_until_complete(init_db())
     yield
@@ -48,7 +42,6 @@ def reset_db(event_loop):
 
 @pytest.fixture(scope="module")
 def test_product(client, auth_token):
-    """Create a test product for order tests"""
     response = client.post(
         "/api/v1/products",
         headers={"Authorization": f"Bearer {auth_token}"},
@@ -67,11 +60,16 @@ def test_product(client, auth_token):
 
 # E2E Tests
 def test_create_and_pay_order_e2e(client, auth_token, reset_db, test_product):
-    """E2E test for creating and paying for an order"""
-    # Set balance first
+    # Set balance first (admin-only endpoint)
+    admin_login = client.post(
+        "/api/v1/auth",
+        json={"username": "admin", "password": "admin"}
+    )
+    assert admin_login.status_code == 200
+    admin_token = admin_login.json()["token"]
     client.post(
         "/api/v1/balance/set?amount=10000.0",
-        headers={"Authorization": f"Bearer {auth_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"}
     )
     
     response = client.post(
@@ -92,11 +90,16 @@ def test_create_and_pay_order_e2e(client, auth_token, reset_db, test_product):
 
 
 def test_create_and_pay_order_insufficient_balance_e2e(client, auth_token, reset_db, test_product):
-    """E2E test for payfor with insufficient balance"""
-    # Reset balance to 0
+    # Reset balance to 0 (admin-only endpoint)
+    admin_login = client.post(
+        "/api/v1/auth",
+        json={"username": "admin", "password": "admin"}
+    )
+    assert admin_login.status_code == 200
+    admin_token = admin_login.json()["token"]
     client.post(
         "/api/v1/balance/set?amount=0.0",
-        headers={"Authorization": f"Bearer {auth_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"}
     )
     
     response = client.post(
@@ -109,4 +112,48 @@ def test_create_and_pay_order_insufficient_balance_e2e(client, auth_token, reset
         }
     )
     
-    assert response.status_code == 400
+    assert response.status_code == 421
+
+
+def test_delete_order_not_found_e2e(client, reset_db):
+    admin_login = client.post(
+        "/api/v1/auth",
+        json={"username": "admin", "password": "admin"}
+    )
+    assert admin_login.status_code == 200
+    admin_token = admin_login.json()["token"]
+
+    missing_id = 999999
+    response = client.delete(
+        f"/api/v1/orders/{missing_id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == 404
+    assert "Order with id" in response.json()["detail"]
+
+
+def test_pay_reorder_warning_not_found_e2e(client, auth_token, reset_db):
+    missing_id = 999999
+    response = client.patch(
+        f"/api/v1/orders/{missing_id}/pay-reorder",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    assert response.status_code == 404
+    assert "Order with id" in response.json()["detail"]
+
+
+def test_issue_reorder_warning_missing_product_e2e(client, auth_token, reset_db):
+    response = client.post(
+        "/api/v1/orders/reorder",
+        headers={"Authorization": f"Bearer {auth_token}"},
+        json={
+            "product_barcode": "9999999999999",
+            "quantity": 1,
+            "price_per_unit": 9.99,
+        },
+    )
+
+    assert response.status_code == 404
+    assert "not found" in response.json()["detail"].lower()

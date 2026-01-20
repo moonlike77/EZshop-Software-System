@@ -1,7 +1,3 @@
-"""
-E2E tests for product routes
-Full-stack tests using TestClient without mocks
-"""
 import pytest
 from fastapi.testclient import TestClient
 from main import app
@@ -11,13 +7,11 @@ from init_db import reset, init_db
 # Fixtures
 @pytest.fixture(scope="module")
 def client():
-    """Test client for making HTTP requests"""
     return TestClient(app)
 
 
 @pytest.fixture(scope="module")
 def auth_token(client):
-    """Get authentication token for manager user"""
     # Reset database
     import asyncio
     loop = asyncio.new_event_loop()
@@ -36,7 +30,6 @@ def auth_token(client):
 
 @pytest.fixture(scope="function")
 def reset_db():
-    """Reset database before each test"""
     import asyncio
     loop = asyncio.new_event_loop()
     loop.run_until_complete(reset())
@@ -47,7 +40,6 @@ def reset_db():
 
 # E2E Tests
 def test_create_product_e2e(client, auth_token, reset_db):
-    """E2E test for creating a product"""
     response = client.post(
         "/api/v1/products",
         headers={"Authorization": f"Bearer {auth_token}"},
@@ -70,7 +62,6 @@ def test_create_product_e2e(client, auth_token, reset_db):
 
 
 def test_create_product_minimal_e2e(client, auth_token, reset_db):
-    """E2E test for creating a product with minimal data"""
     response = client.post(
         "/api/v1/products",
         headers={"Authorization": f"Bearer {auth_token}"},
@@ -88,7 +79,6 @@ def test_create_product_minimal_e2e(client, auth_token, reset_db):
 
 
 def test_get_product_by_id_e2e(client, auth_token, reset_db):
-    """E2E test for retrieving a product by ID"""
     # First create a product
     create_response = client.post(
         "/api/v1/products",
@@ -113,7 +103,6 @@ def test_get_product_by_id_e2e(client, auth_token, reset_db):
 
 
 def test_get_product_by_barcode_e2e(client, auth_token, reset_db):
-    """E2E test for retrieving a product by barcode"""
     # Create a product
     client.post(
         "/api/v1/products",
@@ -137,7 +126,6 @@ def test_get_product_by_barcode_e2e(client, auth_token, reset_db):
 
 
 def test_get_all_products_e2e(client, auth_token, reset_db):
-    """E2E test for retrieving all products"""
     # Create multiple products
     for i in range(3):
         client.post(
@@ -163,7 +151,6 @@ def test_get_all_products_e2e(client, auth_token, reset_db):
 
 
 def test_search_products_e2e(client, auth_token, reset_db):
-    """E2E test for searching products by description"""
     # Create products
     client.post(
         "/api/v1/products",
@@ -197,7 +184,6 @@ def test_search_products_e2e(client, auth_token, reset_db):
 
 
 def test_update_product_e2e(client, auth_token, reset_db):
-    """E2E test for updating a product"""
     # Create a product
     create_response = client.post(
         "/api/v1/products",
@@ -220,14 +206,13 @@ def test_update_product_e2e(client, auth_token, reset_db):
         }
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["description"] == "Updated Product"
     assert data["price_per_unit"] == 15.0
 
 
 def test_update_quantity_e2e(client, auth_token, reset_db):
-    """E2E test for updating product quantity"""
     # Create a product
     create_response = client.post(
         "/api/v1/products",
@@ -247,13 +232,12 @@ def test_update_quantity_e2e(client, auth_token, reset_db):
         headers={"Authorization": f"Bearer {auth_token}"}
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["quantity"] == 150
 
 
 def test_update_position_e2e(client, auth_token, reset_db):
-    """E2E test for updating product position"""
     # Create a product
     create_response = client.post(
         "/api/v1/products",
@@ -272,13 +256,12 @@ def test_update_position_e2e(client, auth_token, reset_db):
         headers={"Authorization": f"Bearer {auth_token}"}
     )
     
-    assert response.status_code == 200
+    assert response.status_code == 201
     data = response.json()
     assert data["position"] == "9-ZY-87"
 
 
 def test_delete_product_e2e(client, reset_db):
-    """E2E test for deleting a product (requires admin)"""
     # Login as admin
     login_resp = client.post(
         "/api/v1/auth",
@@ -308,7 +291,6 @@ def test_delete_product_e2e(client, reset_db):
 
 
 def test_create_product_unauthorized_e2e(client, reset_db):
-    """E2E test for creating product without authentication"""
     response = client.post(
         "/api/v1/products",
         json={
@@ -322,7 +304,6 @@ def test_create_product_unauthorized_e2e(client, reset_db):
 
 
 def test_create_duplicate_barcode_e2e(client, auth_token, reset_db):
-    """E2E test for creating product with duplicate barcode"""
     # Create first product
     client.post(
         "/api/v1/products",
@@ -349,7 +330,6 @@ def test_create_duplicate_barcode_e2e(client, auth_token, reset_db):
 
 
 def test_invalid_position_format_e2e(client, auth_token, reset_db):
-    """E2E test for creating product with invalid position format"""
     response = client.post(
         "/api/v1/products",
         headers={"Authorization": f"Bearer {auth_token}"},

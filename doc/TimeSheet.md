@@ -16,12 +16,12 @@ These figures will not be used to evaluate neither the project nor the team, the
 |  Nov 17 - 23   |          28ph           |        |        |              |                     |                    |                  |            |
 |  Nov 24 - 30   |                         |        |        |              |                     |                    |                  |            |
 |  Dec 1 - 7     |                         |        |        |              |                     |                    |                  |            |
-|  Dec 8 - 14    |                         |        |        |              |                     |                    |                  |            |
-|  Dec 15 - 21   |                         |        |        |              |                     |                    |                  |            |
-|  Dec 22 - 28   |                         |        |        |              |                     |                    |                  |            |
-| Dec 29 - Jan 4 |                         |        |        |              |                     |                    |                  |            |
-|   Jan 5 - 11   |                         |        |        |              |                     |                    |                  |            |
-|  Jan 12 - 18   |                         |        |        |              |                     |                    |                  |            |
+|  Dec 8 - 14    |                         |        |  112ph |              |                     |                    |                  |            |
+|  Dec 15 - 21   |                         |        |  98ph  |              |                     |                    |                  |            |
+|  Dec 22 - 28   |                         |        |        |     214ph    |                     |                    |                  |            |
+| Dec 29 - Jan 4 |                         |        |        |     127ph    |                     |                    |                  |            |
+|   Jan 5 - 11   |                         |        |        |              |        115ph        |                    |                  |            |
+|  Jan 12 - 18   |                         |        |        |              |                     |       152ph        |                  |            |
 |  Jan 19 - 25   |                         |        |        |              |                     |                    |                  |            |
 | Jan 26 - Feb 1 |                         |        |        |              |                     |                    |                  |            |
 |   Feb 2 - 8    |                         |        |        |              |                     |                    |                  |            |

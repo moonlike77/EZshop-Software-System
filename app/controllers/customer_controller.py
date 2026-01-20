@@ -15,7 +15,7 @@ class CustomerController:
         created = await self.repo.create_customer(Customer_dto.name)
         if Customer_dto.card:
             card = await self.card_repo.get_loyalty_card(int(Customer_dto.card.card_id.lstrip('0')))
-            if card:
+            if card is not None:
                 created = await self.repo.update_customer_card(created.id, card.card_id)
         return customerdao_to_dto(created)
 

@@ -25,7 +25,6 @@ class ProductRepository:
         quantity: int = 0,
         position: Optional[str] = None
     ) -> ProductDAO:
-        """Create product or throw ConflictError if barcode exists"""
         async with await self._get_session() as session:
             result = await session.execute(select(ProductDAO).filter(ProductDAO.barcode == barcode))
             existing_products = result.scalars().all()
@@ -50,7 +49,6 @@ class ProductRepository:
             return product
 
     async def get_product_by_id(self, product_id: int) -> ProductDAO:
-        """Get product by ID or throw NotFoundError"""
         async with await self._get_session() as session:
             product = await session.get(ProductDAO, product_id)
             return find_or_throw_not_found(
@@ -60,7 +58,6 @@ class ProductRepository:
             )
 
     async def get_product_by_barcode(self, barcode: str) -> ProductDAO:
-        """Get product by barcode or throw NotFoundError"""
         async with await self._get_session() as session:
             result = await session.execute(select(ProductDAO).filter(ProductDAO.barcode == barcode))
             product = result.scalars().first()
@@ -71,13 +68,11 @@ class ProductRepository:
             )
 
     async def get_all_products(self) -> List[ProductDAO]:
-        """Get all products"""
         async with await self._get_session() as session:
             result = await session.execute(select(ProductDAO))
             return result.scalars().all()
 
     async def search_products_by_description(self, query: str) -> List[ProductDAO]:
-        """Search products by description"""
         async with await self._get_session() as session:
             result = await session.execute(
                 select(ProductDAO).filter(ProductDAO.description.ilike(f"%{query}%"))
@@ -94,7 +89,6 @@ class ProductRepository:
         quantity: Optional[int] = None,
         position: Optional[str] = None
     ) -> ProductDAO:
-        """Update product or throw NotFoundError if not found, ConflictError if new barcode exists"""
         async with await self._get_session() as session:
             db_product = await session.get(ProductDAO, product_id)
 
@@ -135,7 +129,6 @@ class ProductRepository:
             return db_product
 
     async def update_quantity(self, product_id: int, quantity_change: int) -> ProductDAO:
-        """Update product quantity"""
         async with await self._get_session() as session:
             db_product = await session.get(ProductDAO, product_id)
 
@@ -157,7 +150,6 @@ class ProductRepository:
             return db_product
 
     async def update_position(self, product_id: int, position: str) -> ProductDAO:
-        """Update product position"""
         async with await self._get_session() as session:
             db_product = await session.get(ProductDAO, product_id)
 
@@ -173,13 +165,26 @@ class ProductRepository:
                         "Position must match pattern <digits>-<letters>-<digits> (e.g., 1-A-3)"
                     )
 
+                # Position must be unique across products
+                result = await session.execute(
+                    select(ProductDAO).filter(
+                        ProductDAO.position == position,
+                        ProductDAO.id != product_id,
+                    )
+                )
+                conflicting_products = result.scalars().all()
+                throw_conflict_if_found(
+                    conflicting_products,
+                    lambda _: True,
+                    f"Position '{position}' is already assigned to another product",
+                )
+
             db_product.position = position if position != "" else None
             await session.commit()
             await session.refresh(db_product)
             return db_product
 
     async def delete_product(self, product_id: int) -> bool:
-        """Delete product or throw NotFoundError"""
         async with await self._get_session() as session:
             product = await session.get(ProductDAO, product_id)
 
@@ -194,6 +199,5 @@ class ProductRepository:
             return True
 
     def _validate_position_format(self, position: str) -> bool:
-        """Validate position format: <digits>-<letters>-<digits>"""
         pattern = r"^\d+-[A-Za-z]+-\d+$"
         return bool(re.match(pattern, position))

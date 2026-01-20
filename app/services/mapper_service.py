@@ -87,13 +87,15 @@ def carddao_to_carddto(card_dao: LoyaltyCardDAO) -> LoyaltyCardDTO:
 
 def orderdao_to_responsedto(order_dao: OrderDAO, product_barcode: str) -> OrderResponseDTO:
     """Convert OrderDAO to OrderResponseDTO"""
+    status_val = order_dao.status.value if hasattr(order_dao.status, 'value') else str(order_dao.status)
     return OrderResponseDTO(
         id=order_dao.id,
         product_barcode=product_barcode,
         quantity=order_dao.quantity,
         price_per_unit=order_dao.price_per_unit,
-        status=order_dao.status.value if hasattr(order_dao.status, 'value') else str(order_dao.status),
-        issue_date=order_dao.issue_date
+        status=str(status_val).upper(),
+        issue_date=order_dao.issue_date,
+        is_reorder_warning=order_dao.is_reorder_warning
     )
 
 def productdao_to_responsedto(product_dao: ProductDAO) -> ProductResponseDTO:

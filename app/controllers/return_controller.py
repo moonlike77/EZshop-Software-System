@@ -6,18 +6,18 @@ from app.models.return_status import ReturnStatus
 from app.models.errors.notfound_error import NotFoundError
 from app.models.errors.bad_request import BadRequestError
 from app.models.errors.conflict_error import ConflictError 
-from app.models.errors.app_error import AppError # برای InvalidStateError فرضی
+from app.models.errors.invalid_state_error import InvalidStateError
 
 # چون فایل‌های بقیه رو نداری، اینجا فرض میکنیم ایمپورت میشن. 
 # اگر زیرش خط قرمز کشید نگران نباش، وقتی مرج بشه درست میشه.
 # اما اگر میخوای تست کنی، باید این فایل‌ها باشه.
-try:
-    from app.repositories.product_repository import ProductRepository
-    from app.repositories.sale_repository import SaleRepository
-    from app.repositories.system_repository import SystemRepository
-except ImportError:
+#try:
+#    from app.repositories.product_repository import ProductRepository
+#    from app.repositories.sale_repository import SaleRepository
+#    from app.repositories.system_repository import SystemRepository
+#except ImportError:
     # فقط برای اینکه کد بدون بقیه فایل‌ها کرش نکنه (ماک)
-    pass
+#    pass
 
 class ReturnController:
     def __init__(self):
@@ -79,7 +79,7 @@ class ReturnController:
         
         # 2. چک کردن وضعیت (فقط OPEN میشه تغییر داد)
         if return_dao.status != ReturnStatus.OPEN:
-            raise AppError("Cannot modify a closed return", 420)
+            raise InvalidStateError("Cannot modify a closed return")
 
         # 3. چک کردن اینکه کالا توی اون فروش بوده یا نه و قیمت چنده
         # اینجا باید از SaleRepository استفاده کنی تا قیمت رو پیدا کنی
@@ -99,7 +99,7 @@ class ReturnController:
             raise NotFoundError("Return not found")
             
         if return_dao.status != ReturnStatus.OPEN:
-            raise AppError("Cannot remove items from a closed return", 420)
+            raise InvalidStateError("Cannot remove items from a closed return")
             
         success = await self.repo.remove_line_quantity(return_dao, barcode, amount)
         # طبق Swagger اگر موفق بود True برمیگردونه اما اگر آیتم نبود یا... باید هندل شه
@@ -111,7 +111,7 @@ class ReturnController:
             raise NotFoundError("Return not found")
         
         if return_dao.status != ReturnStatus.OPEN:
-             raise AppError("Invalid Return state to be closed", 420)
+             raise InvalidStateError("Invalid Return state to be closed")
 
         # 1. اگر مرجوعی خالی بود، حذفش کن
         if not return_dao.lines:
@@ -131,7 +131,7 @@ class ReturnController:
             raise NotFoundError("Return not found")
         
         if return_dao.status != ReturnStatus.CLOSED:
-             raise AppError("Return must be closed before reimbursement", 420)
+             raise InvalidStateError("Return must be closed before reimbursement")
 
         # محاسبه مبلغ کل
         total_refund = round(sum(line.quantity * line.price_per_unit for line in return_dao.lines))
@@ -148,6 +148,6 @@ class ReturnController:
             raise NotFoundError("Return not found")
             
         if return_dao.status == ReturnStatus.REIMBURSED:
-             raise AppError("Cannot delete a reimbursed return", 420)
+             raise InvalidStateError("Cannot delete a reimbursed return")
              
         await self.repo.delete_return(return_id)

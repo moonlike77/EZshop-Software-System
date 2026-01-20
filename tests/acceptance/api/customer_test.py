@@ -158,7 +158,7 @@ def test_create_loyalty_card_unauthenticated(client):
 
 def test_attach_loyalty_card_to_customer_success(client, auth_tokens):
     resp = client.patch(BASE_URL + "/customers/1/attach-card/0000000001", headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code == 200
+    assert resp.status_code == 201
     data = resp.json()
     assert data["card"] == INITIAL_CARD_1
 
@@ -190,7 +190,7 @@ def test_attach_loyalty_card_to_customer_unauthenticated(client):
 def test_update_loyalty_card_points_success(client, auth_tokens):
     before = client.post(BASE_URL + "/customers/cards", headers=auth_header(auth_tokens, "admin"))
     after = client.patch(BASE_URL + "/customers/cards/4?points=30", headers=auth_header(auth_tokens, "admin"))
-    assert after.status_code == 200
+    assert after.status_code == 201
     points_before = before.json()
     points_after = after.json()
     assert (points_after["points"]-points_before["points"]) == 30
@@ -269,7 +269,7 @@ def test_update_customer_card_but_not_name_success(client, auth_tokens):
 
 def test_update_customer_deletion_card_success(client, auth_tokens):
     resp = client.put(BASE_URL + "/customers/1", json=UPDATED_CUSTOMER_DELETION_CARD, headers=auth_header(auth_tokens, "admin"))
-    assert resp.status_code in (201, 404)
+    assert resp.status_code in (201, 400)
     if resp.status_code == 201:
         assert resp.json()["name"] == "Marco Rossi"
         assert resp.json()["card"] == None

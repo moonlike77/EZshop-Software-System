@@ -1,201 +1,453 @@
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import datetime, timezone
 
 from app.controllers.sale_controller import SaleController
+from app.database.database import AsyncSessionLocal, init_db, reset_db
+
 from app.models.sale_status import SaleStatus
 from app.models.DTO.sale_dto import SaleDTO
 
-from app.models.DAO.sale_dao import SaleDAO
+from app.models.errors.notfound_error import NotFoundError
+from app.models.errors.bad_request import BadRequestError
+from app.models.errors.invalid_state_error import InvalidStateError
+
+from app.models.DAO.product_dao import ProductDAO
 
 
-def _make_sale_dao(
-    sale_id: int = 1,
-    status: SaleStatus = SaleStatus.OPEN,
-    discount_rate: float = 0.0
-) -> SaleDAO:
-    # Usiamo il vero SaleDAO (niente FakeSaleDAO)
-    sale = SaleDAO(
-        status=status,
-        discount_rate=discount_rate,
+# ---------- helpers ----------
+
+async def seed_product(session, barcode="614141007346", qty=100, price=2.99, desc="Test Product", position="1-A-1"):
+    p = ProductDAO(
+        description=desc,
+        barcode=barcode,
+        price_per_unit=price,
+        quantity=qty,
+        position=position,
     )
-    # di solito id/created_at arrivano dal DB, ma per il controller basta averli
-    sale.id = sale_id
-    sale.created_at = datetime.now(timezone.utc)
-    sale.closed_at = None
-    return sale
+    session.add(p)
+    await session.commit()
+    await session.refresh(p)
+    return p
+
+
+async def create_open_sale_with_item(controller: SaleController, barcode: str, amount: int):
+    sale = await controller.start_sale()
+    await controller.add_product_to_sale(sale.id, barcode, amount)
+    return sale.id
+
+
+async def close_sale(controller: SaleController, sale_id: int):
+    ok = await controller.close_sale(sale_id)
+    assert ok is True
+    return ok
+
+
+async def pay_sale(controller: SaleController, sale_id: int, cash: float):
+    change = await controller.pay_sale(sale_id, cash)
+    assert isinstance(change, float)
+    return change
+
+
+# ---------- tests ----------
+
+@pytest.mark.asyncio
+async def test_start_sale_succes():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
+
+        sale = await c.start_sale()
+
+        assert isinstance(sale, SaleDTO)
+        assert sale.id is not None
+        assert sale.status == SaleStatus.OPEN
+        assert sale.discount_rate == 0.0
 
 
 @pytest.mark.asyncio
-async def test_start_sale_returns_dto():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.create_sale = AsyncMock()
+async def test_list_sales_success():
+    await reset_db()
+    await init_db()
 
-    sale_dao = _make_sale_dao(sale_id=10, status=SaleStatus.OPEN, discount_rate=0.0)
-    mock_repo_inst.create_sale.return_value = sale_dao
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+        s1 = await c.start_sale()
+        s2 = await c.start_sale()
 
-        result = await controller.start_sale()
+        res = await c.list_sales()
 
-        mock_repo_inst.create_sale.assert_called_once()
-        assert isinstance(result, SaleDTO)
-        assert result.id == 10
-        assert result.status == SaleStatus.OPEN
-        assert result.discount_rate == 0.0
-
-
-@pytest.mark.asyncio
-async def test_list_sales_returns_list_of_dtos():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.list_sales = AsyncMock()
-
-    mock_repo_inst.list_sales.return_value = [
-        _make_sale_dao(sale_id=1, status=SaleStatus.OPEN),
-        _make_sale_dao(sale_id=2, status=SaleStatus.PENDING),
-    ]
-
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
-
-        result = await controller.list_sales()
-
-        mock_repo_inst.list_sales.assert_called_once()
-        assert isinstance(result, list)
-        assert len(result) == 2
-        assert all(isinstance(x, SaleDTO) for x in result)
-        assert result[0].id == 1
-        assert result[1].id == 2
-        assert result[1].status == SaleStatus.PENDING
+        ids = [x.id for x in res]
+        assert s1.id in ids
+        assert s2.id in ids
 
 
 @pytest.mark.asyncio
-async def test_get_sale_returns_dto():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.get_sale = AsyncMock()
+async def test_get_sale_success():
+    await reset_db()
+    await init_db()
 
-    mock_repo_inst.get_sale.return_value = _make_sale_dao(sale_id=7, status=SaleStatus.OPEN, discount_rate=0.2)
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+        s = await c.start_sale()
+        got = await c.get_sale(s.id)
 
-        result = await controller.get_sale(7)
-
-        mock_repo_inst.get_sale.assert_called_once_with(7)
-        assert isinstance(result, SaleDTO)
-        assert result.id == 7
-        assert result.discount_rate == 0.2
+        assert got.id == s.id
+        assert got.status == SaleStatus.OPEN
 
 
 @pytest.mark.asyncio
-async def test_delete_sale_calls_repo_and_returns_bool():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.delete_sale = AsyncMock(return_value=True)
+async def test_get_sale_not_found():
+    await reset_db()
+    await init_db()
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
 
-        result = await controller.delete_sale(5)
-
-        mock_repo_inst.delete_sale.assert_called_once_with(5)
-        assert result is True
-
-
-@pytest.mark.asyncio
-async def test_add_product_to_sale_calls_repo():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.add_product_to_sale = AsyncMock(return_value=True)
-
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
-
-        result = await controller.add_product_to_sale(3, "ABC", 2)
-
-        mock_repo_inst.add_product_to_sale.assert_called_once_with(3, "ABC", 2)
-        assert result is True
+        with pytest.raises(NotFoundError):
+            await c.get_sale(999)
 
 
 @pytest.mark.asyncio
-async def test_remove_product_from_sale_calls_repo():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.remove_product_from_sale = AsyncMock(return_value=True)
+async def test_delete_sale_success():
+    await reset_db()
+    await init_db()
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
 
-        result = await controller.remove_product_from_sale(3, "ABC", 1)
+        s = await c.start_sale()
+        ok = await c.delete_sale(s.id)
 
-        mock_repo_inst.remove_product_from_sale.assert_called_once_with(3, "ABC", 1)
-        assert result is True
-
-
-@pytest.mark.asyncio
-async def test_apply_discount_calls_repo():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.apply_discount = AsyncMock(return_value=True)
-
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
-
-        result = await controller.apply_discount(9, 0.15)
-
-        mock_repo_inst.apply_discount.assert_called_once_with(9, 0.15)
-        assert result is True
+        assert ok is True
+        with pytest.raises(NotFoundError):
+            await c.get_sale(s.id)
 
 
 @pytest.mark.asyncio
-async def test_apply_product_discount_calls_repo():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.apply_product_discount = AsyncMock(return_value=True)
+async def test_delete_sale_not_found():
+    await reset_db()
+    await init_db()
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
 
-        result = await controller.apply_product_discount(9, "ABC", 0.3)
-
-        mock_repo_inst.apply_product_discount.assert_called_once_with(9, "ABC", 0.3)
-        assert result is True
-
-
-@pytest.mark.asyncio
-async def test_close_sale_calls_repo():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.close_sale = AsyncMock(return_value=True)
-
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
-
-        result = await controller.close_sale(11)
-
-        mock_repo_inst.close_sale.assert_called_once_with(11)
-        assert result is True
+        with pytest.raises(NotFoundError):
+            await c.delete_sale(999)
 
 
 @pytest.mark.asyncio
-async def test_pay_sale_returns_change():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.pay_sale = AsyncMock(return_value=12.5)
+async def test_add_product_success():
+    await reset_db()
+    await init_db()
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
 
-        change = await controller.pay_sale(4, 100.0)
+        c = SaleController()
+        c.repo._session = session
 
-        mock_repo_inst.pay_sale.assert_called_once_with(4, 100.0)
-        assert change == 12.5
+        s = await c.start_sale()
+        ok = await c.add_product_to_sale(s.id, "A1", 2)
+
+        assert ok is True
 
 
 @pytest.mark.asyncio
-async def test_get_sale_points_returns_int():
-    mock_repo_inst = MagicMock()
-    mock_repo_inst.get_sale_points = AsyncMock(return_value=42)
+async def test_add_product_bad_amount():
+    await reset_db()
+    await init_db()
 
-    with patch("app.controllers.sale_controller.SaleRepository", return_value=mock_repo_inst):
-        controller = SaleController()
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
 
-        points = await controller.get_sale_points(4)
+        c = SaleController()
+        c.repo._session = session
 
-        mock_repo_inst.get_sale_points.assert_called_once_with(4)
-        assert points == 42
-        assert isinstance(points, int)
+        s = await c.start_sale()
+        with pytest.raises(BadRequestError):
+            await c.add_product_to_sale(s.id, "A1", 0)
+
+
+@pytest.mark.asyncio
+async def test_add_product_insufficient_stock():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=1, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        s = await c.start_sale()
+        with pytest.raises(BadRequestError):
+            await c.add_product_to_sale(s.id, "A1", 2)
+
+
+@pytest.mark.asyncio
+async def test_remove_product_success():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 5)
+
+        ok = await c.remove_product_from_sale(sale_id, "A1", 2)
+        assert ok is True
+
+
+@pytest.mark.asyncio
+async def test_remove_product_bad_amount():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 2)
+
+        with pytest.raises(BadRequestError):
+            await c.remove_product_from_sale(sale_id, "A1", 0)
+
+
+@pytest.mark.asyncio
+async def test_remove_product_too_many():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 2)
+
+        with pytest.raises(BadRequestError):
+            await c.remove_product_from_sale(sale_id, "A1", 3)
+
+
+@pytest.mark.asyncio
+async def test_discount_sale_success():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
+
+        s = await c.start_sale()
+        ok = await c.apply_discount(s.id, 0.10)
+
+        assert ok is True
+        got = await c.get_sale(s.id)
+        assert got.discount_rate == 0.10
+
+
+@pytest.mark.asyncio
+async def test_discount_sale_bad_rate():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
+
+        s = await c.start_sale()
+        with pytest.raises(BadRequestError):
+            await c.apply_discount(s.id, 1.0)
+
+
+@pytest.mark.asyncio
+async def test_discount_sale_not_open():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 1)
+        await close_sale(c, sale_id)
+
+        with pytest.raises(InvalidStateError):
+            await c.apply_discount(sale_id, 0.10)
+
+
+@pytest.mark.asyncio
+async def test_discount_product_success():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 2)
+
+        ok = await c.apply_product_discount(sale_id, "A1", 0.25)
+        assert ok is True
+
+
+@pytest.mark.asyncio
+async def test_discount_product_bad_rate():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 2)
+
+        with pytest.raises(BadRequestError):
+            await c.apply_product_discount(sale_id, "A1", -0.1)
+
+
+@pytest.mark.asyncio
+async def test_close_success_sets_pending_and_closed_at():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 1)
+        ok = await c.close_sale(sale_id)
+        assert ok is True
+
+        got = await c.get_sale(sale_id)
+        assert got.status == SaleStatus.PENDING
+        assert got.closed_at is not None
+
+
+@pytest.mark.asyncio
+async def test_close_empty_sale_deletes_it():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
+
+        s = await c.start_sale()
+        ok = await c.close_sale(s.id)
+        assert ok is True
+
+        with pytest.raises(NotFoundError):
+            await c.get_sale(s.id)
+
+
+@pytest.mark.asyncio
+async def test_pay_success():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 2)
+        await close_sale(c, sale_id)
+
+        change = await c.pay_sale(sale_id, 10.0)
+        assert change == 6.0
+
+        got = await c.get_sale(sale_id)
+        assert got.status == SaleStatus.PAID
+        assert got.closed_at is not None
+
+
+@pytest.mark.asyncio
+async def test_pay_bad_cash_amount():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        c = SaleController()
+        c.repo._session = session
+
+        s = await c.start_sale()
+        with pytest.raises(BadRequestError):
+            await c.pay_sale(s.id, 0.0)
+
+
+@pytest.mark.asyncio
+async def test_pay_not_pending():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 1)
+        with pytest.raises(InvalidStateError):
+            await c.pay_sale(sale_id, 10.0)
+
+
+@pytest.mark.asyncio
+async def test_points_success():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 2)
+        await close_sale(c, sale_id)
+        await pay_sale(c, sale_id, 10.0)
+
+        pts = await c.get_sale_points(sale_id)
+        assert pts == 4
+
+
+@pytest.mark.asyncio
+async def test_points_not_paid():
+    await reset_db()
+    await init_db()
+
+    async with AsyncSessionLocal() as session:
+        await seed_product(session, barcode="A1", qty=10, price=2.0)
+
+        c = SaleController()
+        c.repo._session = session
+
+        sale_id = await create_open_sale_with_item(c, "A1", 1)
+        await close_sale(c, sale_id)
+
+        with pytest.raises(InvalidStateError):
+            await c.get_sale_points(sale_id)
