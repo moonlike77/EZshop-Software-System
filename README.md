@@ -1,39 +1,111 @@
-# FastAPI MVC Project
+# 🛒 EZShop – Full-Stack Retail Management System
 
+EZShop is a full-stack software engineering project developed at Politecnico di Torino.  
+The system simulates the backend logic and data management of a retail shop, including product catalog management, sales tracking, and persistent storage.
 
-## Setup
+This project was developed in a 5-member team following software engineering and testing practices.
 
+---
 
-1. Create a virtualenv and install dependencies:
+## 👥 Team
+
+- Mahsa Hashemzadeh  
+- Marco Oliviero
+- Edwin Liby  
+- Letizia Pontarolo  
+- Nima Hosseini 
+
+---
+
+## 🧰 Tech Stack
+
+- Python  
+- FastAPI  
+- SQL / SQLAlchemy  
+- Pytest  
+- Git / GitLab workflow  
+- MVC Architecture  
+
+---
+
+## 🧱 Architecture
+
+The application follows an MVC-inspired layered architecture:
+
+- **Models** – data schema and persistence  
+- **Services** – business logic  
+- **API** – FastAPI endpoints  
+- **Database** – SQL storage layer  
+
+---
+
+## ✅ Features
+
+- Product catalog management  
+- Inventory tracking  
+- Sales registration  
+- Customer data handling  
+- Persistent database storage  
+- REST API endpoints  
+
+---
+
+## ⚙️ Setup
+
+Create virtual environment and install dependencies:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate # on Windows: .venv\\Scripts\\activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-```
+````
 
-2. Initialize the database:
+Initialize database:
 
 ```bash
 python init_db.py
 ```
 
-3. Run the application:
+Run the application:
+
 ```bash
 uvicorn main:app --reload
 ```
-## API Documentation
-You can find the swagger in the corresponding file.
 
-## Running Tests
-To run the tests, use the command:
+---
+
+## 🧪 Testing
+
+Run tests:
 
 ```bash
-    pytest .\tests\<your test path>
+pytest ./tests
 ```
 
-To run the tests with coverage report, use the command:
+Run tests with coverage:
 
 ```bash
-    pytest --cov=app .\tests\<your test path>
+pytest --cov=app ./tests
+```
+
+---
+
+## 📄 Documentation
+
+API documentation is available via Swagger when running the application.
+
+---
+
+## 🎓 Academic Context
+
+Software Engineering Project
+Politecnico di Torino
+
+---
+
+## 🚀 Author
+
+Mahsa Hashemzadeh
+MSc Data Science and Engineering – Politecnico di Torino
+
 ```
